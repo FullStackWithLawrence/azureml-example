@@ -1,0 +1,10 @@
+[MASTER]
+ignore-paths=venv,node_modules
+ignore=__version__.py
+init-hook='import sys; sys.path.append("./azureml_example")'
+
+[FORMAT]
+max-line-length=120
+
+[MESSAGES CONTROL]
+disable=W0511,too-few-public-methods,invalid-name,line-too-long,no-self-argument,missing-function-docstring,too-many-ancestors,no-member,R0801

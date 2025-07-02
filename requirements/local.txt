@@ -1,0 +1,23 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      Python local development requirements
+# -----------------------------------------------------------------------------
+
+-r base.txt
+
+
+# Code linters, formatters, and security scanners
+# ------------
+black==25.1.0
+flake8==7.3.0
+flake8-coding==1.3.2
+pre-commit==4.2.0
+isort==6.0.1
+mypy==1.16.1
+pylint==3.3.7
+bandit==1.8.5
+pydocstringformatter==0.7.3
+tox==4.27.0
+codespell==2.4.1

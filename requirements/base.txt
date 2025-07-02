@@ -1,0 +1,13 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      Python local development requirements
+# -----------------------------------------------------------------------------
+
+python-dotenv==1.1.1
+
+# Azure ML SDK - essential components only
+azureml-core==1.60.0.post1
+azureml-train-core==1.60.0
+azureml-pipeline-core==1.60.0

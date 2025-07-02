@@ -1,0 +1,8 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      Python local development requirements
+# -----------------------------------------------------------------------------
+
+-r base.txt

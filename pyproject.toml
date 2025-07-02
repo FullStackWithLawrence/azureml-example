@@ -1,0 +1,44 @@
+[project]
+name = "Smarter"
+version = "0.10.24"
+requires-python = ">=3.10"
+
+[project.urls]
+homepage = "https://github.com/FullStackWithLawrence/azureml_example-example"
+documentation = "https://github.com/FullStackWithLawrence/azureml_example-example"
+repository = "https://github.com/FullStackWithLawrence/azureml_example-example"
+
+[tool.isort]
+profile = "black"
+lines_after_imports = 2
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | \.env
+  | venv
+  | node_modules
+  | build
+  | buck-out
+  | build
+  | dist
+  | __pypackages__
+  | staticfiles
+  |.pypi_cache
+  | .pytest_cache
+  | .coverage
+  | keen_v3.0.6
+  | mysql-data
+  | htmlcov
+  | .eggs
+  | .idea
+)/
+'''

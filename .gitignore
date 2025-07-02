@@ -1,0 +1,87 @@
+keen_**
+
+# application data
+# -------------------------------------
+celerybeat-schedule
+mysql-data
+db.sqlite3
+.cache.sqlite
+staticfiles
+*.swp
+
+# build artifacts
+# -------------------------------------
+**/build/
+**/dist/
+*.zip
+# But don't ignore '.github/actions/build'
+!.github/actions/build/
+
+
+# coverage artifacts
+# -------------------------------------
+**/.coverage
+**/.coverage.*
+htmlcov
+
+# Jupyter Notebook
+# -------------------------------------
+.ipynb_checkpoints
+
+# os files
+# -------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# log data
+# -------------------------------------
+*.log
+*.db
+*.out
+
+
+# typical secrets files
+# -------------------------------------
+.env
+secrets.json
+config.json
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+*.der
+*.p7b
+*.p7c
+
+# Local .terraform directories
+# -------------------------------------
+.terragrunt-cache/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+# don't ignore this file
+!tfmodule-template.tf
+
+
+# Python
+# -------------------------------------
+.pypi_cache
+__pycache__
+.pytest_cache
+venv
+.venv
+.pytest_cache
+*.pyc
+*.pyo
+*.pyd
+
+# ReactJS
+node_modules
+package-lock.json

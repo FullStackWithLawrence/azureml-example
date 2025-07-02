@@ -31,8 +31,8 @@ runs:
     - name: Check for azureml-core in requirements
       shell: bash
       run: |
-        if ! grep -q "azureml-core" requirements/prod.txt; then
-          echo "azureml-core not found in requirements/prod.txt" >&2
+        if ! grep -q "azureml-core" requirements/base.txt; then
+          echo "azureml-core not found in requirements/base.txt" >&2
           exit 1
         fi
 
@@ -40,7 +40,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements/base.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements/prod.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip
 

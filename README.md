@@ -2,9 +2,9 @@
 
 [![AzureML](https://a11ybadges.com/badge?logo=azure)](https://azure.microsoft.com/en-us/products/machine-learning/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
-[![Unit Tests](https://github.com/lpm0073/azureml-example/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/lpm0073/azureml-example/actions/workflows/testsPython.yml)
-![Release Status](https://github.com/lpm0073/azureml-example/actions/workflows/release.yml/badge.svg?branch=main)
-![Auto Assign](https://github.com/lpm0073/azureml-example/actions/workflows/auto-assign.yml/badge.svg)
+[![Unit Tests](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/testsPython.yml)
+![Release Status](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/release.yml/badge.svg?branch=main)
+![Auto Assign](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/auto-assign.yml/badge.svg)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
@@ -29,7 +29,7 @@ Works with Linux, Windows and macOS environments.
 4. Initialize, build and run the application locally.
 
 ```console
-git clone https://github.com/lpm0073/azureml-example.git
+git clone https://github.com/FullStackWithLawrence/azureml-example.git
 make                # scaffold a .env file in the root of the repo
                     #
                     # ****************************

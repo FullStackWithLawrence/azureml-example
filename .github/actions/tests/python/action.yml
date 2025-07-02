@@ -40,7 +40,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements/prod.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements/base.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip
 

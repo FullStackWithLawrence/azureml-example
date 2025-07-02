@@ -14,7 +14,9 @@ Note the following:
 
 1. Model training is a computationally intensive task and it is not free. You'll need a paid [Azure Subscription](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account). Expect to spend in the neighborhood of $0.10/per hour ($USD) when training models.
 
-2. This repo is currently based on Python3.9 even though this is several versions behind the latest stable version of Python. **DO NOT ARBITRARILY UPGRADE TO LATER VERSIONS OF PYTHON**. This repo is actively maintained. We monitor this. You have been warned.
+2. This repo is currently based on Python3.9 even though this is several versions behind the latest stable version of Python. **DO NOT ARBITRARILY UPGRADE TO LATER VERSIONS OF PYTHON**. It will break. This repo is actively maintained. We monitor this. You have been warned.
+
+3. This project leverages [Github Actions](https://github.com/features/actions) for automated unit tests, build, deploy, in addition to automating various administrative tasks including for example, automating updates to 3rd party package requirements. Most of these are visible from the [Actions](https://github.com/FullStackWithLawrence/azureml-example/actions) tab above.
 
 ## Usage
 

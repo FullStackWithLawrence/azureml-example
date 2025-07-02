@@ -27,5 +27,4 @@ jobs:
         uses: ./.github/actions/tests/python
         with:
           python-version: "${{ env.python-version}}"
-          openai-api-organization: "${{ secrets.OPENAI_API_ORGANIZATION }}"
-          openai-api-key: "${{ secrets.OPENAI_API_KEY }}"
+          config-json: "${{ secrets.CONFIG_DOT_JSON }}"

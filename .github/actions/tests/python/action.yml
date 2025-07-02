@@ -11,6 +11,10 @@ inputs:
     description: "The version of Python to use, such as 3.9"
     required: true
     type: string
+  config-json:
+    description: "The contents of the config.json file, typically from Azure ML"
+    required: true
+    type: string
 
 runs:
   using: "composite"
@@ -22,7 +26,7 @@ runs:
     - name: Add config.json
       shell: bash
       run: |
-        echo '${{ secrets.CONFIG_DOT_JSON }}' > config.json
+        echo '${{ inputs.config-json }}' > config.json
 
     - name: Check for azureml-core in requirements
       shell: bash

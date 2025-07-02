@@ -10,12 +10,13 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-is_github_actions: bool = bool(os.getenv("GITHUB_ACTIONS", "false").lower() == "true")
 logger = getLogger(__name__)
 
 
 class SmarterTestBase(unittest.TestCase):
     """Base class for all unit tests."""
+
+    is_github_actions: bool = bool(os.getenv("GITHUB_ACTIONS", "false").lower() == "true")
 
     @classmethod
     def setUpClass(cls):
@@ -26,6 +27,11 @@ class SmarterTestBase(unittest.TestCase):
     def tearDownClass(cls):
         """Clean up class-level resources."""
         logger.info("Tearing down class-level resources...")
+
+    def setUp(self):
+        """Set up test case resources."""
+        logger.info("Setting up test case: %s", self.id())
+        logger.info("GITHUB_ACTIONS: %s", self.is_github_actions)
 
     # pylint: disable=C0415,W0611,W0401,W0718
     def test_azureml_imports(self):
@@ -85,7 +91,7 @@ class SmarterTestBase(unittest.TestCase):
 
     def test_workspace_connection(self):
         """Test workspace connection using config.json."""
-        if is_github_actions:
+        if self.is_github_actions:
             print("⚠️  Skipping workspace connection test in GitHub Actions environment")
             return
 

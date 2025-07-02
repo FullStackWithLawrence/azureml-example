@@ -27,4 +27,3 @@ jobs:
         uses: ./.github/actions/tests/python
         with:
           python-version: "${{ env.python-version}}"
-          config-json: "${{ secrets.CONFIG_DOT_JSON }}"

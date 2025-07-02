@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
+is_github_actions: bool = bool(os.getenv("GITHUB_ACTIONS", "false").lower() == "true")
 logger = getLogger(__name__)
 
 
@@ -84,6 +85,10 @@ class SmarterTestBase(unittest.TestCase):
 
     def test_workspace_connection(self):
         """Test workspace connection using config.json."""
+        if is_github_actions:
+            print("⚠️  Skipping workspace connection test in GitHub Actions environment")
+            return
+
         try:
             from azureml.core import Workspace
 

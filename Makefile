@@ -54,11 +54,8 @@ init:
 	deactivate
 
 test:
-	if [ -d "venv" ]; then \
-	    $(ACTIVATE_VENV) && python -m unittest discover -s azureml_example/; \
-	else \
-	    python -m unittest discover -s azureml_example/; \
-	fi
+	$(ACTIVATE_VENV) && python -m unittest discover -s azureml_example/; \
+
 lint:
 	isort . && \
 	pre-commit run --all-files && \

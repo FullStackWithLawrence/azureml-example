@@ -11,10 +11,6 @@ inputs:
     description: "The version of Python to use, such as 3.9"
     required: true
     type: string
-  config-json:
-    description: "The contents of the config.json file, typically from Azure ML"
-    required: true
-    type: string
 
 runs:
   using: "composite"
@@ -22,11 +18,6 @@ runs:
     - name: Checkout code
       id: checkout
       uses: actions/checkout@v4
-
-    - name: Add config.json
-      shell: bash
-      run: |
-        echo '${{ inputs.config-json }}' > config.json
 
     - name: Check for azureml-core in requirements
       shell: bash
@@ -70,7 +61,7 @@ runs:
       shell: bash
       run: |
         touch ./.env
-        echo "AZUREML_CONFIG_PATH=./config.json\nDEBUG_MODE=False" >> ./.env
+        echo "GITHUB_ACTIONS=true\nDEBUG_MODE=False" >> ./.env
 
     - name: Run Python unit tests
       shell: bash

@@ -1,0 +1,78 @@
+---
+#------------------------------------------------------------------------------
+# Run Python unit tests
+#------------------------------------------------------------------------------
+name: Test Python
+branding:
+  icon: "git-pull-request"
+  color: "orange"
+inputs:
+  python-version:
+    description: "The version of Python to use, such as 3.9"
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      id: checkout
+      uses: actions/checkout@v4
+
+    - name: Add config.json
+      shell: bash
+      run: |
+        echo '${{ secrets.CONFIG_DOT_JSON }}' > config.json
+
+    - name: Check for azureml-core in requirements
+      shell: bash
+      run: |
+        if ! grep -q "azureml-core" requirements/prod.txt; then
+          echo "azureml-core not found in requirements/prod.txt" >&2
+          exit 1
+        fi
+
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements/prod.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: locate site-packages path
+      shell: bash
+      run: |
+        echo "SITE_PACKAGES_PATH=$(python -c 'import site; print(site.getsitepackages()[0])')" >> $GITHUB_ENV
+
+    - name: Install pip
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install -r requirements/prod.txt
+      env:
+        SITE_PACKAGES_PATH: ${{ env.SITE_PACKAGES_PATH }}
+
+    - name: Create .env
+      shell: bash
+      run: |
+        touch ./.env
+        echo "AZUREML_CONFIG_PATH=./config.json\nDEBUG_MODE=False" >> ./.env
+      env:
+
+    - name: Run Python unit tests
+      shell: bash
+      env:
+        GITHUB_ACTIONS: "true"
+        DEBUG_MODE: "true"
+      run: |
+        make test

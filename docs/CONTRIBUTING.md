@@ -12,7 +12,7 @@ Smarter follows opinionated code style policies for most of the technologies in 
 - Docker CE 25x or later
 - Docker Compose
 - npm: 10.4 or later
-- python: 3.11 or later
+- python: 3.9 **(IMPORTANT: DO NOT INSTALL A VERSION LATER THAN THIS)**
 - git: 2.x or later
 - make: 3.8 or later
 

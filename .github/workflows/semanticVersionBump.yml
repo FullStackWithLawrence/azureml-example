@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION_FILE: __version__.py
-      PACKAGE_PATH: ${{ github.workspace }}/app/
+      PACKAGE_PATH: ${{ github.workspace }}/azureml_example/
 
     steps:
       - uses: actions/checkout@v4

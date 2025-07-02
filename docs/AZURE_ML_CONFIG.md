@@ -9,7 +9,7 @@ This guide explains how to securely configure your Azure ML workspace connection
 ### Option 1: Project Root (Recommended for Development)
 
 ```
-/Users/mcdaniel/Desktop/gh/fswl/azureml_example-example/config.json
+/Users/mcdaniel/Desktop/gh/fswl/azureml-example/config.json
 ```
 
 **Pros:**

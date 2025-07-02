@@ -47,7 +47,7 @@ make docker-run     # Run docker container
 
 ## Support
 
-Please report bugs to the [GitHub Issues Page](https://github.com/FullStackWithLawrence/azureml_example-example/issues) for this project.
+Please report bugs to the [GitHub Issues Page](https://github.com/FullStackWithLawrence/azureml-example/issues) for this project.
 
 ## Developers
 

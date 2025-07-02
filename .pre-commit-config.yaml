@@ -11,7 +11,6 @@ repos:
     hooks:
       - id: codespell
         args: ["--ignore-words=codespell.txt"]
-        exclude: '\.svg$|^smarter/smarter/static/|^helm/'
   - repo: local
     hooks:
       - id: eslint
@@ -24,7 +23,6 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        exclude: "^smarter/|^helm/"
   - repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
@@ -63,9 +61,7 @@ repos:
       - id: check-symlinks
       - id: check-toml
       - id: check-xml
-        exclude: "smarter/smarter/static/|smarter/smarter/templates/"
       - id: check-yaml
-        exclude: ^smarter/smarter/apps/api/v1/cli/tests/data/api-connection\.yaml$
       - id: destroyed-symlinks
       - id: detect-aws-credentials
         args: ["--allow-missing-credentials"]

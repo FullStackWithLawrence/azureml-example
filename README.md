@@ -2,9 +2,9 @@
 
 [![AzureML](https://a11ybadges.com/badge?logo=azure)](https://azure.microsoft.com/en-us/products/machine-learning/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
-[![Unit Tests](https://github.com/QueriumCorp/smarter/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/QueriumCorp/smarter/actions/workflows/releaseController.yml)
-![Release Status](https://github.com/QueriumCorp/smarter/actions/workflows/release.yml/badge.svg?branch=main)
-![Auto Assign](https://github.com/QueriumCorp/smarter/actions/workflows/auto-assign.yml/badge.svg)
+[![Unit Tests](https://github.com/lpm0073/azureml-example/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/lpm0073/azureml-example/actions/workflows/releaseController.yml)
+![Release Status](https://github.com/lpm0073/azureml-example/actions/workflows/release.yml/badge.svg?branch=main)
+![Auto Assign](https://github.com/lpm0073/azureml-example/actions/workflows/auto-assign.yml/badge.svg)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
@@ -16,8 +16,6 @@ Note the following:
 
 2. This repo is currently based on Python3.9 even though this is several versions behind the latest stable version of Python. **DO NOT ARBITRARILY UPGRADE TO LATER VERSIONS OF PYTHON**. This repo is actively maintained. We monitor this. You have been warned.
 
-3. See [Azure ML Configuration Guide](./docs/AZURE_ML_CONFIG.md) for detailed instructions on setting up an Azure Workspace and Subscription, and downloading your `config.json` file.
-
 ## Usage
 
 Works with Linux, Windows and macOS environments.
@@ -26,10 +24,12 @@ Works with Linux, Windows and macOS environments.
 
 2. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
 
-3. Initialize, build and run the application locally.
+3. Add your Azure `config.json` to the root of this project. See [Azure ML Configuration Guide](./docs/AZURE_ML_CONFIG.md) for detailed instructions on setting up an Azure Workspace and Subscription, and downloading your `config.json` file.
+
+4. Initialize, build and run the application locally.
 
 ```console
-git clone https://github.com/QueriumCorp/smarter.git
+git clone https://github.com/lpm0073/azureml-example.git
 make                # scaffold a .env file in the root of the repo
                     #
                     # ****************************
@@ -37,9 +37,12 @@ make                # scaffold a .env file in the root of the repo
                     # ****************************
                     # Review your .env file located in the project root folder.
                     #
-make python-init    # initialize Python virtual environment used for code auto-completion and linting
-make docker-build   # builds and configures all docker containers
-make docker-run     # runs all docker containers and starts a local web server http://127.0.0.1:8000/
+make init           # Initialize Python virtual environment used for code auto-completion and linting
+make test           # Verify that your Python virtual environment was built correctly and that
+                    # azureml.core finds your config.json file.
+                    #
+make docker-build   # Build and configure all docker containers
+make docker-run     # Run docker container
 ```
 
 ## Support

@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-REPO_NAME := openai-hello-world
+REPO_NAME := azureml-example
 
 ifeq ($(OS),Windows_NT)
     PYTHON = python.exe
@@ -16,16 +16,10 @@ else
     $(shell echo -e "ENVIRONMENT=dev\nAZUREML_CONFIG_PATH=./config.json\n\nDOCKERHUB_USERNAME=localhost\nDOCKERHUB_ACCESS_TOKEN=SET-ME-PLEASE\nPYTHONPATH=./venv:./azureml_example\n" >> .env)
 endif
 
-.PHONY: analyze pre-commit init lint clean test build release
+.PHONY: analyze pre-commit init lint clean test build release all python-init docker-build docker-push docker-run docker-prune help
 
 # Default target executed when no arguments are given to make.
 all: help
-
-analyze:
-	cloc . --exclude-ext=svg,json,zip --vcs=git
-
-release:
-	git commit -m "fix: force a new release" --allow-empty && git push
 
 # -------------------------------------------------------------------------
 # Install and run pre-commit hooks
@@ -36,7 +30,8 @@ pre-commit:
 	pre-commit run --all-files
 
 # ---------------------------------------------------------
-# create python virtual environments for prod
+# create a local python virtual environment. Includes linters
+# and other tools for local development.
 # ---------------------------------------------------------
 python-init:
 	make clean
@@ -46,19 +41,20 @@ python-init:
 	$(PIP) install -r requirements/local.txt && \
 	deactivate
 
-# ---------------------------------------------------------
-# create python virtual environments for dev
-# ---------------------------------------------------------
-init-dev:
+######################
+# CORE COMMANDS
+######################
+init:
+	make clean && \
 	make python-init && \
 	npm install && \
 	$(ACTIVATE_VENV) && \
 	$(PIP) install -r requirements/local.txt && \
-	deactivate && \
-	pre-commit install
+	pre-commit install && \
+	deactivate
 
 test:
-	$(ACTIVATE_VENV) && which python3 && python3 --version && pip show azureml-core && python -m unittest discover -s azureml_example/
+	$(ACTIVATE_VENV) && python -m unittest discover -s azureml_example/
 
 lint:
 	isort . && \
@@ -70,6 +66,15 @@ lint:
 clean:
 	rm -rf venv node_modules azureml_example/__pycache__ package-lock.json
 
+analyze:
+	cloc . --exclude-ext=svg,json,zip --vcs=git
+
+release:
+	git commit -m "fix: force a new release" --allow-empty && git push
+
+######################
+# DOCKER
+######################
 docker-build:
 	docker build -t ${DOCKERHUB_USERNAME}/${REPO_NAME} .
 
@@ -83,9 +88,6 @@ docker-run:
 	source .env && \
 	docker run -it -e OPENAI_API_KEY=${OPENAI_API_KEY} -e ENVIRONMENT=prod ${DOCKERHUB_USERNAME}/${REPO_NAME}:latest
 
-docker-test:
-	make docker-check && \
-	docker exec smarter-app bash -c "./manage.py test"
 
 docker-prune:
 	@if [ "`docker ps -aq`" ]; then \
@@ -104,10 +106,13 @@ help:
 	@echo 'analyze         - generate code analysis report'
 	@echo 'release         - force a new GitHub release'
 	@echo 'init            - create a Python virtual environment and install prod dependencies'
-	@echo 'init-dev        - install dev dependencies'
+	@echo 'python-init     - create a Python virtual environment with local dependencies'
+	@echo 'pre-commit      - install and run pre-commit hooks'
 	@echo 'test            - run Python unit tests'
 	@echo 'lint            - run Python linting'
 	@echo 'clean           - destroy the Python virtual environment'
 	@echo 'docker-build    - build the Docker image'
 	@echo 'docker-push     - push the Docker image to DockerHub'
 	@echo 'docker-run      - run the Docker image'
+	@echo 'docker-prune    - clean up Docker containers and images'
+	@echo '===================================================================='

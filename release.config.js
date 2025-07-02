@@ -16,9 +16,9 @@ module.exports = {
       {
         assets: [
           "CHANGELOG.md",
-          "smarter/smarter/apps/chatapp/reactapp/package.json",
-          "smarter/smarter/apps/chatapp/reactapp/package-lock.json",
-          "smarter/requirements/**/*",
+          "package.json",
+          "package-lock.json",
+          "requirements/**/*",
         ],
         message:
           "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",

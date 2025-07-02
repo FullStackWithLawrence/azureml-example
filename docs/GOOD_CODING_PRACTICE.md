@@ -6,22 +6,18 @@ This microservice fully conforms to [12-Factor methodology](./12-FACTOR.md). Mor
 
 This project includes an extensive collection of Python unit tests for verifying both the cloud infrastructure, its configuration, and of course, the Python code itself. As of Feb-2024 there are nearly 70 unit tests incorporated into the automated CI-CD processes (see below). In accordance with Python best practice, this project uses [coverage](https://pypi.org/project/coverage/) to gauge the overall effectiveness of these tests.
 
-## Pydantic
-
-Originally created in 2017, [Pydantic](https://docs.pydantic.dev/latest/) has become the most widely used data validation library for Python. It is especially useful for data driven applications like this one, involving frequent integrations with a variety of cloud infrastructure services in a variety of environments, configured by a variety of different possible sources of data including environment variables, .env file, terraform.tfvars and system constants. We use it for the [Settings](../python/openai_passthrough/common/conf.py) class in this project, and also for validating yaml [plugins](.smarter/chat/custom_config.py) for the OpenAI Function Calling feature. It's an important addition because it enforces strong type and business rule validation checking of all of the configuration parameters for the AWS Lambdas, and it ensures that nothing ever changes these values at run-time once they've been set. And this in turn is important because erroneous automation code could otherwise lead to some wildly disastrous results. 😳
-
 ## Automations
 
 We leverage automations using Github Actions, third party services, make, bash and anything else that might become freely available to the project in future. As a community-supported code project, automations are important for minimizing the effort required by our committers to keep this code shippable. But it's also an important component of our strategy for maintaining high quality standards. Automations give us the ability to do more work, more consistently, and with less effort.
 
 Of note:
 
-- [Automated Pull Requests](https://github.com/QueriumCorp/smarter/pulls?q=is%3Apr+is%3Aclosed): Github Actions are triggered on pull requests to run any of several different kinds of technology-specific unit tests depending on the contents of the commits included in the PR.
+- [Automated Pull Requests](https://github.com/lpm0073/azureml-example/pulls?q=is%3Apr+is%3Aclosed): Github Actions are triggered on pull requests to run any of several different kinds of technology-specific unit tests depending on the contents of the commits included in the PR.
 - [python-dotenv](https://pypi.org/project/python-dotenv/) for storing sensitive data for local development
 - [.gitignore](./.gitignore) ensures that no sensitive nor useless data accidentally gets pushed to GitHub.
 - [tox.ini](./tox.ini) file for configuring behaviors of Python testing tools
 - [GitHub Actions](https://github.com/features/actions) automates unit testing, semantic release rule checking, and dependabot actions.
-- [GitHub Secrets](https://github.com/QueriumCorp/smarter/settings/secrets/actions) to provide sensitive data to Github Actions workflows
+- [GitHub Secrets](https://github.com/lpm0073/azureml-example/settings/secrets/actions) to provide sensitive data to Github Actions workflows
 - [GitHub Issues](https://github.com/features/issues)
 - [Makefile](./Makefile) automates procedures like init, build, test, release and linting for Python, ReactJS and Terraform.
 - [pre-commit](https://pre-commit.com/) automatically enforces a multitude of code quality, coding style and security policies.

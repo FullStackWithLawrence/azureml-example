@@ -19,6 +19,11 @@ runs:
       id: checkout
       uses: actions/checkout@v4
 
+    - name: Add config.json
+      shell: bash
+      run: |
+        echo '{"subscription_id": "ADD-ME-PLASE", "resource_group": "ubc-cdl10", "workspace_name": "ubc-cdl10"}' > config.json
+
     - name: Check for azureml-core in requirements
       shell: bash
       run: |

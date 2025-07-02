@@ -4,9 +4,9 @@ version = "0.10.24"
 requires-python = ">=3.10"
 
 [project.urls]
-homepage = "https://github.com/FullStackWithLawrence/azureml_example-example"
-documentation = "https://github.com/FullStackWithLawrence/azureml_example-example"
-repository = "https://github.com/FullStackWithLawrence/azureml_example-example"
+homepage = "https://github.com/FullStackWithLawrence/azureml-example"
+documentation = "https://github.com/FullStackWithLawrence/azureml-example"
+repository = "https://github.com/FullStackWithLawrence/azureml-example"
 
 [tool.isort]
 profile = "black"

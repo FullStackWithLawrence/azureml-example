@@ -2,7 +2,7 @@
 
 [![AzureML](https://a11ybadges.com/badge?logo=azure)](https://azure.microsoft.com/en-us/products/machine-learning/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
-[![Unit Tests](https://github.com/lpm0073/azureml-example/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/lpm0073/azureml-example/actions/workflows/releaseController.yml)
+[![Unit Tests](https://github.com/lpm0073/azureml-example/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/lpm0073/azureml-example/actions/workflows/testsPython.yml)
 ![Release Status](https://github.com/lpm0073/azureml-example/actions/workflows/release.yml/badge.svg?branch=main)
 ![Auto Assign](https://github.com/lpm0073/azureml-example/actions/workflows/auto-assign.yml/badge.svg)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)

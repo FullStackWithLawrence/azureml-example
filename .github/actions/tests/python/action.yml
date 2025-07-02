@@ -67,7 +67,6 @@ runs:
       run: |
         touch ./.env
         echo "AZUREML_CONFIG_PATH=./config.json\nDEBUG_MODE=False" >> ./.env
-      env:
 
     - name: Run Python unit tests
       shell: bash

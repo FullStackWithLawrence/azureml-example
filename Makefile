@@ -56,6 +56,9 @@ init:
 test:
 	$(ACTIVATE_VENV) && python -m unittest discover -s azureml_example/; \
 
+test-ci:
+	python -m unittest discover -s azureml_example/;
+
 lint:
 	isort . && \
 	pre-commit run --all-files && \

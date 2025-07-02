@@ -1,4 +1,4 @@
-name: Python Unit Tests
+name: Test
 
 on:
   workflow_dispatch:

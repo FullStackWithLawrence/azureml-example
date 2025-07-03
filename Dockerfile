@@ -6,7 +6,7 @@ FROM python:3.9-slim
 WORKDIR /dist
 
 # Copy the current directory contents into the container at /app
-COPY azureml_example /dist/azureml_example
+COPY azure_ai /dist/azure_ai
 COPY requirements/base.txt base.txt
 COPY requirements/prod.txt requirements.txt
 
@@ -20,4 +20,4 @@ RUN pip install --upgrade pip && \
 
 
 # Run the application when the container launches
-CMD ["python", "azureml_example/automated_ml.py"]
+CMD ["python", "azure_ai/automated_ml.py"]

@@ -4,7 +4,7 @@ Test script to verify Azure ML installation is working properly.
 
 import os
 
-from azureml_example.automated_ml import AzureMLCluster
+from azure_ai.ml_studio import AzureAIMLStudioComputeCluster
 
 from .test_base import AzureMLTestBase
 
@@ -24,5 +24,5 @@ class AzureMLTestCluster(AzureMLTestBase):
         if not self.is_testable:
             return
 
-        cluster = AzureMLCluster(cluster_name="standard-cluster")
-        self.assertIsInstance(cluster, AzureMLCluster)
+        cluster = AzureAIMLStudioComputeCluster(cluster_name="standard-cluster")
+        self.assertIsInstance(cluster, AzureAIMLStudioComputeCluster)

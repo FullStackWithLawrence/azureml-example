@@ -13,7 +13,7 @@ PIP = $(PYTHON) -m pip
 ifneq ("$(wildcard .env)","")
     include .env
 else
-    $(shell echo -e "ENVIRONMENT=dev\nAZUREML_CONFIG_PATH=./config.json\n\nDOCKERHUB_USERNAME=localhost\nDOCKERHUB_ACCESS_TOKEN=SET-ME-PLEASE\nPYTHONPATH=./venv:./azureml_example\n" >> .env)
+    $(shell echo -e "ENVIRONMENT=dev\nAZUREML_CONFIG_PATH=./config.json\n\nDOCKERHUB_USERNAME=localhost\nDOCKERHUB_ACCESS_TOKEN=SET-ME-PLEASE\nPYTHONPATH=./venv:./azure_ai\n" >> .env)
 endif
 
 .PHONY: analyze pre-commit init lint clean test build release all python-init docker-build docker-push docker-run docker-prune help
@@ -54,20 +54,20 @@ init:
 	deactivate
 
 test:
-	$(ACTIVATE_VENV) && python -m unittest discover -s azureml_example/; \
+	$(ACTIVATE_VENV) && python -m unittest discover -s azure_ai/; \
 
 test-ci:
-	python -m unittest discover -s azureml_example/;
+	python -m unittest discover -s azure_ai/;
 
 lint:
 	isort . && \
 	pre-commit run --all-files && \
 	black . && \
-	flake8 ./azureml_example/ && \
-	pylint ./azureml_example/**/*.py
+	flake8 ./azure_ai/ && \
+	pylint ./azure_ai/**/*.py
 
 clean:
-	rm -rf venv node_modules azureml_example/__pycache__ package-lock.json
+	rm -rf venv node_modules azure_ai/__pycache__ package-lock.json
 
 analyze:
 	cloc . --exclude-ext=svg,json,zip --vcs=git

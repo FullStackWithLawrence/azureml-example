@@ -16,7 +16,7 @@ def setup_config_json():
 
     # Check if config.json already exists
     project_config = Path("./config.json")
-    user_config = Path.home() / ".azureml_example" / "config.json"
+    user_config = Path.home() / ".azure_ai" / "config.json"
 
     if project_config.exists():
         print(f"✅ Found config.json in project root: {project_config.absolute()}")
@@ -124,7 +124,7 @@ def main():
         print("\n" + "=" * 40)
         print("✅ Setup complete!")
         print("\nNext steps:")
-        print("1. Run the test: python azureml_example/tests/test_azureml.py")
+        print("1. Run the test: python azure_ai/tests/test_azureml.py")
         print("2. Start developing with Azure ML")
     else:
         print("\n" + "=" * 40)

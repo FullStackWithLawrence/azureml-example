@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION_FILE: __version__.py
-      PACKAGE_PATH: ${{ github.workspace }}/azureml_example/
+      PACKAGE_PATH: ${{ github.workspace }}/azure_ai/
 
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +56,7 @@ jobs:
         id: current_version
         run: |
           cd ${{ env.PACKAGE_PATH }}
-          echo "CURRENT_VERSION=$(python -c 'from azureml_example.__version__ import __version__; print(__version__)')" >> $GITHUB_ENV
+          echo "CURRENT_VERSION=$(python -c 'from azure_ai.__version__ import __version__; print(__version__)')" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 

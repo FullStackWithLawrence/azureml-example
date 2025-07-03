@@ -11,6 +11,15 @@ from typing import Optional, Union
 
 import kaggle
 import pandas as pd
+from azure.ai.ml import Input, MLClient
+from azure.ai.ml.entities import (
+    BatchEndpoint,
+    BatchJob,
+    BatchRetrySettings,
+    ModelBatchDeployment,
+)
+from azure.core.exceptions import ResourceNotFoundError
+from azure.identity import DefaultAzureCredential
 from azureml.core import Dataset, Experiment, Workspace
 from azureml.core.compute import AmlCompute, ComputeTarget
 from azureml.core.compute_target import ComputeTargetException
@@ -28,8 +37,11 @@ from dotenv import load_dotenv
 logger = getLogger(__name__)
 
 
-class AzureMLWorkspace:
-    """Class to encapsulate Azure ML example functionality."""
+class AzureAIMLWorkspace:
+    """
+    Azure AI ML Studio Workspace class.
+    Class to encapsulate Azure ML example functionality.
+    """
 
     workspace: Workspace
 
@@ -47,8 +59,9 @@ class AzureMLWorkspace:
             raise e
 
 
-class AzureMLDataset(AzureMLWorkspace):
+class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
     """
+    Azure AI ML Studio Assets -> Dataset class.
     Class to encapsulate Azure ML dataset functionality.
 
     args:
@@ -61,7 +74,7 @@ class AzureMLDataset(AzureMLWorkspace):
         description: Description for the dataset (optional)
     """
 
-    dataset: Union[FileDataset, TabularDataset]
+    dataset: Optional[Union[FileDataset, TabularDataset]] = None
 
     def __init__(
         self,
@@ -82,6 +95,33 @@ class AzureMLDataset(AzureMLWorkspace):
         self.description = description
         self.dataset = self.get_or_create()
 
+    @classmethod
+    def get_default_name(cls, workspace: Workspace) -> str:
+        """
+        Get the name of the first dataset in the workspace.
+
+        Args:
+            workspace: Azure ML workspace
+
+        Returns:
+            str: Name of the first dataset
+
+        Raises:
+            ValueError: If no datasets are found in the workspace
+        """
+        try:
+            datasets = Dataset.list(workspace=workspace)
+            if not datasets:
+                raise ValueError("No datasets found in the workspace")
+
+            first_dataset_name = next(iter(datasets)).name
+            logger.info("Found first dataset: %s", first_dataset_name)
+            return first_dataset_name
+
+        except Exception as e:
+            logger.error("Failed to get first dataset name: %s", e)
+            raise e
+
     def get_or_create(self) -> Union[FileDataset, TabularDataset]:
         """
         Get or create an Azure ML dataset from a pandas DataFrame or Kaggle source.
@@ -100,6 +140,10 @@ class AzureMLDataset(AzureMLWorkspace):
             ValueError: If neither source_data nor kaggle_dataset is provided
             Exception: If dataset creation fails
         """
+        if self.dataset is not None:
+            logger.info("Using existing dataset: %s", self.dataset_name)
+            return self.dataset
+
         try:
             dataset = Dataset.get_by_name(workspace=self.workspace, name=self.dataset_name)
             logger.info("Found existing dataset: %s", self.dataset_name)
@@ -150,7 +194,7 @@ class AzureMLDataset(AzureMLWorkspace):
                 shutil.copy2(temp_file_path, upload_file_path)
 
                 # Now upload only this clean directory
-                file_dataset = FileDatasetFactory.upload_directory(
+                FileDatasetFactory.upload_directory(
                     src_dir=upload_dir, target=(datastore, target_path), overwrite=True, show_progress=True
                 )
 
@@ -280,26 +324,60 @@ class AzureMLDataset(AzureMLWorkspace):
             logger.warning("Dis not find dataset %s: %s", self.dataset_name, e)
 
 
-class AzureMLCluster(AzureMLWorkspace):
-    """Class to encapsulate Azure ML example functionality."""
+class AzureAIMLStudioComputeCluster(AzureAIMLWorkspace):
+    """
+    Azure AI ML Studio Compute -> Cluster class.
+    Class to encapsulate Azure ML example functionality.
+    """
 
-    cluster: ComputeTarget
+    cluster: Optional[ComputeTarget] = None
 
     def __init__(
         self,
-        cluster_name: str,
         *args,
+        cluster_name: Optional[str] = None,
         vm_size: str = "STANDARD_DS3_V2",
         min_nodes: int = 0,
         max_nodes: int = 4,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.cluster_name = cluster_name
+        self.cluster_name = cluster_name or AzureAIMLStudioComputeCluster.get_default_name(self.workspace)
         self.vm_size = vm_size
         self.min_nodes = min_nodes
         self.max_nodes = max_nodes
         self.cluster = self.get_or_create()
+
+    @classmethod
+    def get_default_name(cls, workspace: Workspace) -> str:
+        """
+        Get the name of the first compute cluster in the workspace.
+
+        Args:
+            workspace: Azure ML workspace
+
+        Returns:
+            str: Name of the first compute cluster
+
+        Raises:
+            ValueError: If no compute clusters are found in the workspace
+        """
+        try:
+            compute_targets = workspace.compute_targets
+
+            # Filter for compute clusters only (AmlCompute type)
+            cluster_names = [name for name, target in compute_targets.items() if target.type == "AmlCompute"]
+
+            if not cluster_names:
+                raise ValueError("No compute clusters found in the workspace")
+
+            first_cluster_name = cluster_names[0]
+            logger.info("Found first compute cluster: %s", first_cluster_name)
+            return first_cluster_name
+
+        except Exception as e:
+            logger.error("Failed to get first cluster name: %s", e)
+            raise e
 
     def get_or_create(self) -> ComputeTarget:
         """
@@ -314,6 +392,10 @@ class AzureMLCluster(AzureMLWorkspace):
         Returns:
             ComputeTarget: The compute cluster
         """
+        if self.cluster is not None:
+            logger.info("Using existing cluster: %s", self.cluster_name)
+            return self.cluster
+
         try:
             cluster = self.workspace.compute_targets[self.cluster_name]
             logger.info("Found existing cluster: %s", self.cluster_name)
@@ -344,16 +426,257 @@ class AzureMLCluster(AzureMLWorkspace):
             raise e
 
 
-class AzureAutoML(AzureMLWorkspace):
-    """Class to encapsulate Azure AutoML functionality."""
+class AzureAIMLStudioAssetsBatchEndpoint(AzureAIMLWorkspace):
+    """
+    Azure AI ML Studio Assets -> Endpoint class.
+    Class to encapsulate Azure ML assets batch endpoint functionality.
+    """
+
+    endpoint: Optional[BatchEndpoint] = None
+
+    def __init__(
+        self,
+        endpoint_name: str,
+        model_name: str,
+        *args,
+        compute_target_name: Optional[str] = None,
+        deployment_name: Optional[str] = None,
+        instance_count: int = 2,
+        max_concurrency_per_instance: int = 1,
+        mini_batch_size: int = 10,
+        retry_settings_max_retries: int = 3,
+        retry_settings_timeout: int = 300,
+        description: Optional[str] = "Batch endpoint for model inference",
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.endpoint_name = endpoint_name
+        self.model_name = model_name
+        self.compute_target_name = compute_target_name or AzureAIMLStudioComputeCluster.get_default_name(self.workspace)
+        self.deployment_name = deployment_name or f"{model_name}-deployment"
+        self.instance_count = instance_count
+        self.max_concurrency_per_instance = max_concurrency_per_instance
+        self.mini_batch_size = mini_batch_size
+        self.retry_settings_max_retries = retry_settings_max_retries
+        self.retry_settings_timeout = retry_settings_timeout
+        self.description = description
+
+        # Initialize ML Client for v2 SDK
+        self.ml_client = MLClient(
+            credential=DefaultAzureCredential(),
+            subscription_id=self.workspace.subscription_id,
+            resource_group_name=self.workspace.resource_group,
+            workspace_name=self.workspace.name,
+        )
+
+        self.endpoint = self.get_or_create()
+
+    @classmethod
+    def get_default_name(cls, workspace: Workspace) -> Optional[str]:
+        """
+        Get the name of the first batch endpoint in the workspace.
+
+        Args:
+            workspace: Azure ML workspace
+
+        Returns:
+            str: Name of the first batch endpoint
+
+        Raises:
+            ValueError: If no batch endpoints are found in the workspace
+        """
+        try:
+            # Initialize ML Client for v2 SDK to access batch endpoints
+            ml_client = MLClient(
+                credential=DefaultAzureCredential(),
+                subscription_id=workspace.subscription_id,
+                resource_group_name=workspace.resource_group,
+                workspace_name=workspace.name,
+            )
+
+            # Get all batch endpoints
+            batch_endpoints = list(ml_client.batch_endpoints.list())
+
+            if not batch_endpoints:
+                raise ValueError("No batch endpoints found in the workspace")
+
+            first_endpoint_name = batch_endpoints[0].name
+            logger.info("Found first batch endpoint: %s", first_endpoint_name)
+            return first_endpoint_name
+
+        except Exception as e:
+            logger.error("Failed to get first batch endpoint name: %s", e)
+            raise e
+
+    def get_or_create(self) -> BatchEndpoint:
+        """
+        Get or create an Azure ML batch endpoint by name.
+
+        Returns:
+            BatchEndpoint: The batch endpoint
+
+        Raises:
+            Exception: If endpoint creation fails
+        """
+        if self.endpoint is not None:
+            logger.info("Using existing batch endpoint: %s", self.endpoint_name)
+            return self.endpoint
+
+        if not self.endpoint_name:
+            raise ValueError("Endpoint name must be provided")
+
+        try:
+            logger.info("Looking for existing batch endpoint: %s", self.endpoint_name)
+            endpoint = self.ml_client.batch_endpoints.get(name=self.endpoint_name)
+            logger.info("Found existing batch endpoint: %s", self.endpoint_name)
+            return endpoint
+        # pylint: disable=W0718
+        except Exception:
+            logger.warning("Batch endpoint not found, creating new batch endpoint: %s", self.endpoint_name)
+
+        if not self.description:
+            self.description = f"Batch endpoint for {self.model_name} model"
+        if not self.endpoint_name:
+            raise ValueError("Endpoint name must be provided")
+
+        try:
+            logger.info("Creating batch endpoint: %s", self.endpoint_name)
+            endpoint = BatchEndpoint(
+                name=self.endpoint_name,
+                description=self.description,
+            )
+            endpoint_poller = self.ml_client.batch_endpoints.begin_create_or_update(endpoint)
+            endpoint = endpoint_poller.result()
+            logger.info("Successfully created batch endpoint: %s", self.endpoint_name)
+
+            # Create batch deployment
+            self._create_batch_deployment(endpoint)
+
+            return endpoint
+
+        except Exception as e:
+            logger.error("Failed to create batch endpoint %s: %s", self.endpoint_name, e)
+            raise e
+
+    def _create_batch_deployment(self, endpoint: BatchEndpoint):
+        """
+        Create a batch deployment for the endpoint.
+
+        Args:
+            endpoint: The batch endpoint to deploy to
+        """
+        try:
+            logger.info("Looking for model: %s", self.model_name)
+            model = self.ml_client.models.get(name=self.model_name, label="latest")
+            logger.info("Retrieved model: %s", self.model_name)
+
+            logger.info("Verifying compute target: %s", self.compute_target_name)
+            AzureAIMLStudioComputeCluster(
+                cluster_name=self.compute_target_name, vm_size="STANDARD_DS3_V2", min_nodes=0, max_nodes=4
+            ).get_or_create()
+
+            # Create batch deployment
+            logger.info("Creating batch deployment: %s", self.deployment_name)
+            model_batch_deployment = ModelBatchDeployment(
+                name=self.deployment_name,
+                description=f"Batch deployment for {self.model_name}",
+                endpoint_name=self.endpoint_name,
+                model=model,
+                compute=self.compute_target_name,
+                instance_count=self.instance_count,
+                max_concurrency_per_instance=self.max_concurrency_per_instance,
+                mini_batch_size=self.mini_batch_size,
+                retry_settings=BatchRetrySettings(
+                    max_retries=self.retry_settings_max_retries, timeout=self.retry_settings_timeout
+                ),
+                environment_variables={"AZUREML_MODEL_DIR": "$AZUREML_MODEL_DIR"},
+            )
+            logger.info("Created model batch deployment object: %s", self.deployment_name)
+
+            try:
+                logger.info("Creating batch deployment: %s", self.deployment_name)
+                model_batch_deployment = self.ml_client.batch_deployments.begin_create_or_update(
+                    model_batch_deployment
+                ).result()
+                logger.info("Successfully created batch deployment: %s", self.deployment_name)
+            except ResourceNotFoundError as e:
+                logger.error("Failed to create batch deployment %s: %s", self.deployment_name, e)
+                raise e
+
+            # Set as default deployment
+            logger.info("Setting %s as default deployment for endpoint %s", self.deployment_name, self.endpoint_name)
+            endpoint.defaults = {"deployment_name": self.deployment_name}
+            self.ml_client.batch_endpoints.begin_create_or_update(endpoint).result()
+            logger.info("Set %s as default deployment for endpoint %s", self.deployment_name, self.endpoint_name)
+
+        except Exception as e:
+            logger.error("Failed to create batch deployment %s: %s", self.deployment_name, e)
+            raise e
+
+    def invoke_batch_job(self, input_data_path: str, output_data_path: Optional[str] = None):
+        """
+        Invoke a batch inference job on the endpoint.
+
+        Args:
+            input_data_path: Path to input data for batch inference
+            output_data_path: Path for output data (optional)
+
+        Returns:
+            BatchJob: The batch job object
+        """
+        try:
+            logger.info("Invoking batch job on endpoint: %s", self.endpoint_name)
+
+            inputs = {"input_data": Input(type="uri_folder", path=input_data_path)}
+
+            # Create outputs configuration if provided
+            outputs = None
+            if output_data_path:
+                outputs = {"output_data": Input(type="uri_folder", path=output_data_path)}
+
+            # Submit the batch job using the invoke method
+            job = self.ml_client.batch_endpoints.invoke(
+                endpoint_name=self.endpoint_name, deployment_name=self.deployment_name, inputs=inputs, outputs=outputs
+            )
+
+            logger.info("Successfully invoked batch job: %s", job.name)
+            return job
+
+        except Exception as e:
+            logger.error("Failed to invoke batch job on endpoint %s: %s", self.endpoint_name, e)
+            raise e
+
+    def delete(self):
+        """
+        Delete the Azure ML batch endpoint.
+
+        Raises:
+            Exception: If endpoint deletion fails
+        """
+        try:
+            self.ml_client.batch_endpoints.begin_delete(name=self.endpoint_name).result()
+            logger.info("Successfully deleted batch endpoint: %s", self.endpoint_name)
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.warning("Could not delete batch endpoint %s: %s", self.endpoint_name, e)
+
+
+class AzureAIMLStudioAuthoringAutomatedML(AzureAIMLWorkspace):
+    """
+    Azure AI ML Studio Authoring -> AutomatedML class.
+    Class to encapsulate Azure AutoML functionality.
+    """
 
     def __init__(self, dataset_name: str, cluster_name: str, *args, **kwargs):
-        """Initialize the AzureAutoML class."""
+        """
+        Azure AI ML Studio Authoring -> AutomatedML class.
+        Initialize the AzureAIMLStudioAuthoringAutomatedML class.
+        """
         super().__init__()
-        self.dataset: Union[FileDataset, TabularDataset] = AzureMLDataset(
+        self.dataset: Union[FileDataset, TabularDataset] = AzureAIMLAssetsDataset(
             dataset_name=dataset_name, *args, **kwargs
         ).dataset
-        self.cluster: ComputeTarget = AzureMLCluster(cluster_name=cluster_name, *args, **kwargs).cluster
+        self.cluster: ComputeTarget = AzureAIMLStudioComputeCluster(cluster_name=cluster_name, *args, **kwargs).cluster
 
     def run_automl_experiment(
         self,
@@ -470,6 +793,13 @@ class AzureAutoML(AzureMLWorkspace):
         """
         try:
             best_run, fitted_model = self.get_best_model(run)
+            logger.info(
+                "Registering best model from run %s with name: %s, best_run: %s, fitted model: %s",
+                run.id,
+                model_name,
+                best_run,
+                fitted_model,
+            )
 
             # Register the model
             model = best_run.register_model(

@@ -4,7 +4,7 @@ Test script to verify Azure ML installation is working properly.
 
 import os
 
-from azureml_example.automated_ml import AzureMLDataset
+from azure_ai.ml_studio import AzureAIMLAssetsDataset
 
 from .test_base import AzureMLTestBase
 
@@ -20,10 +20,10 @@ class AzureMLTestDataset(AzureMLTestBase):
         if not self.is_testable:
             return
 
-        dataset = AzureMLDataset(
+        dataset = AzureAIMLAssetsDataset(
             dataset_name="student-performance-base",
         )
-        self.assertIsInstance(dataset, AzureMLDataset)
+        self.assertIsInstance(dataset, AzureAIMLAssetsDataset)
 
     def test_kaggle_dataset(self):
         """
@@ -33,11 +33,11 @@ class AzureMLTestDataset(AzureMLTestBase):
         if not self.is_testable:
             return
 
-        dataset = AzureMLDataset(
+        dataset = AzureAIMLAssetsDataset(
             dataset_name="whenamancodes-student-performance",
             kaggle_dataset="whenamancodes/student-performance",
         )
-        self.assertIsInstance(dataset, AzureMLDataset)
+        self.assertIsInstance(dataset, AzureAIMLAssetsDataset)
         dataset.delete()
 
     def test_file_dataset(self):
@@ -52,9 +52,9 @@ class AzureMLTestDataset(AzureMLTestBase):
         if not self.is_testable:
             return
 
-        dataset = AzureMLDataset(
+        dataset = AzureAIMLAssetsDataset(
             dataset_name="test-maths-dataset",
             file_name=os.path.join(HERE, "data", "maths.csv"),
         )
-        self.assertIsInstance(dataset, AzureMLDataset)
+        self.assertIsInstance(dataset, AzureAIMLAssetsDataset)
         dataset.delete()

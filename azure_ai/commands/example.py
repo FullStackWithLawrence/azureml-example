@@ -1,9 +1,15 @@
-from .automated_ml import AzureAutoML
+"""
+Example script to run an Azure AutoML experiment using the AzureAIMLStudioAuthoringAutomatedML class.
+"""
+
+from azure_ai.ml_studio import AzureAIMLStudioAuthoringAutomatedML
 
 
 def main():
 
-    automl = AzureAutoML(dataset_name="student-performance-base", cluster_name="standard-cluster")
+    automl = AzureAIMLStudioAuthoringAutomatedML(
+        dataset_name="student-performance-base", cluster_name="standard-cluster"
+    )
 
     automl.run_automl_experiment(
         experiment_name="test",

@@ -1,7 +1,7 @@
 [MASTER]
 ignore-paths=venv,node_modules
 ignore=__version__.py
-init-hook='import sys; sys.path.append("./azureml_example")'
+init-hook='import sys; sys.path.append("./azure_ai")'
 
 [FORMAT]
 max-line-length=120

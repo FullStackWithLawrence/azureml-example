@@ -30,7 +30,13 @@ Works with Linux, Windows and macOS environments.
 
 4. Add your Kaggle Api key to [.kaggle/kaggle.json](./.kaggle/kaggle.json), which you can generate from [https://www.kaggle.com/settings/account](https://www.kaggle.com/settings/account).
 
-5. Initialize, build and run the application locally.
+5. Install and configure Azure cli. On Mac `brew install azure-cli`. On Windows download from [https://aka.ms/installazurecliwindows](https://aka.ms/installazurecliwindows).
+
+   - `az login`
+   - `az account list --output table`
+   - `az account set --subscription "your-subscription-id-or-name"`
+
+6. Initialize, build and run the application locally.
 
 ```console
 git clone https://github.com/FullStackWithLawrence/azureml-example.git

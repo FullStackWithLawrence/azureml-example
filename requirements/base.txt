@@ -5,13 +5,17 @@
 # usage:      Python local development requirements
 # -----------------------------------------------------------------------------
 
-python-dotenv==1.1.1
-pandas==2.3.0
-kaggle==1.7.4.5
-openpyxl==3.1.5
+python-dotenv==1.1.1    # for loading environment variables from .env files
+pandas==1.5.3           # for data manipulation
+kaggle==1.7.4.5         # for Kaggle api access
+openpyxl==3.1.5         # for Excel file support from kaggle datasets
 
 # Azure ML SDK - essential components only
 azureml-core==1.60.0.post1
 azureml-train-core==1.60.0
 azureml-pipeline-core==1.60.0
 azureml-train-automl==1.60.0
+
+# Azure AI SDK - essential components only
+azure-ai-ml==1.27.1
+azure-storage-blob==12.19.0

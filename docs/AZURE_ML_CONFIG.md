@@ -25,7 +25,7 @@ This guide explains how to securely configure your Azure ML workspace connection
 ### Option 2: User Home Directory (Recommended for Global Use)
 
 ```
-~/.azureml_example/config.json
+~/.azure_ai/config.json
 ```
 
 **Pros:**
@@ -58,7 +58,7 @@ chmod 600 config.json  # Read/write for owner only
 For production/CI environments, use environment variables instead:
 
 ```python
-from azureml_example.core import Workspace
+from azure_ai.core import Workspace
 
 # Using environment variables
 ws = Workspace(
@@ -73,7 +73,7 @@ ws = Workspace(
 For automated deployments, use service principal authentication:
 
 ```python
-from azureml_example.core.authentication import ServicePrincipalAuthentication
+from azure_ai.core.authentication import ServicePrincipalAuthentication
 
 svc_pr = ServicePrincipalAuthentication(
     tenant_id=os.environ['AZURE_TENANT_ID'],
@@ -115,14 +115,14 @@ The downloaded file should look like this:
 python setup_config.py
 
 # Run the test
-python azureml_example/tests/test_azureml.py
+python azure_ai/tests/test_azureml.py
 ```
 
 ### Manual Testing
 
 ```bash
 # From project root
-python azureml_example/tests/test_azureml.py
+python azure_ai/tests/test_azureml.py
 ```
 
 ### Test Components

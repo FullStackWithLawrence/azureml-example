@@ -1,5 +1,5 @@
 
 
 
-azureml_example-sdk
+azure_ai-sdk
 ruamel.yaml>=0.18.0

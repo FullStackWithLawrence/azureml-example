@@ -1,6 +1,10 @@
 """
+Lawrence McDaniel
+https://lawrencemcdaniel.com
+
 Create a dataset from a local file.
-~/Desktop/gh/fswl/azureml-example/azure_ai/tests/data/maths.csv
+usage:
+  python3 -m azure_ai.commands.dataset_from_file maths ~/Desktop/gh/fswl/azureml-example/azure_ai/tests/data/maths.csv
 """
 
 import argparse

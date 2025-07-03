@@ -1,4 +1,7 @@
 """
+Lawrence McDaniel
+https://lawrencemcdaniel.com
+
 Basic Azure ML example showing how to connect to workspace and create experiments.
 """
 

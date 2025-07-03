@@ -1,6 +1,10 @@
 """
+Lawrence McDaniel
+https://lawrencemcdaniel.com
+
 Create a dataset from Kaggle.
-https://www.kaggle.com/datasets/heptapod/titanic
+usage:
+    python3 -m azure_ai.commands.dataset_from_kaggle titanic heptapod/titanic
 """
 
 import argparse

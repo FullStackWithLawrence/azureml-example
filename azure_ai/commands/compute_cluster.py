@@ -1,5 +1,10 @@
 """
+Lawrence McDaniel
+https://lawrencemcdaniel.com
+
 Get or create a compute cluster in Azure AI Studio.
+usage:
+    python3 -m azure_ai.commands.compute_cluster cluster-name
 """
 
 import json

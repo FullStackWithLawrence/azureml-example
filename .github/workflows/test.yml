@@ -33,3 +33,4 @@ jobs:
         uses: ./.github/actions/tests/python
         with:
           python-version: "${{ env.python-version}}"
+          kaggle-json: "${{ secrets.KAGGLE_JSON }}"

@@ -11,6 +11,10 @@ inputs:
     description: "The version of Python to use, such as 3.9"
     required: true
     type: string
+  kaggle-json:
+    description: "Kaggle JSON credentials for accessing datasets"
+    required: true
+    type: string
 
 runs:
   using: "composite"
@@ -23,6 +27,17 @@ runs:
       shell: bash
       run: |
         echo '{"subscription_id": "ADD-ME-PLASE", "resource_group": "ubc-cdl10", "workspace_name": "ubc-cdl10"}' > config.json
+
+    #--------------------------------------------------------------------------------
+    # Add kaggle.json for accessing Kaggle datasets
+    # example: {"username":"lawrencemcdaniel","key":"2f00 --32 characters -- 26a6"}
+    #--------------------------------------------------------------------------------
+    - name: Add kaggle.json
+      shell: bash
+      run: |
+        mkdir -p ~/.kaggle
+        echo "${{ inputs.kaggle-json }}" | base64 --decode > ~/.kaggle/kaggle.json
+        chmod 600 ~/.kaggle/kaggle.json
 
     - name: Check for azureml-core in requirements
       shell: bash

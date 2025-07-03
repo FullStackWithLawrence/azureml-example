@@ -12,7 +12,7 @@ from .test_base import AzureMLTestBase
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class SmarterTestBase(AzureMLTestBase):
+class AzureMLTestDataset(AzureMLTestBase):
     """Base class for all unit tests."""
 
     def test_existing_dataset(self):
@@ -41,7 +41,13 @@ class SmarterTestBase(AzureMLTestBase):
         dataset.delete()
 
     def test_file_dataset(self):
-        """Test that we can create and use an Azure ML workspace with a file dataset."""
+        """
+        Test that we can create and use an Azure ML workspace with a file dataset.
+        The test file is an Excel workbook incorrected named `maths.csv` that contains
+        a single sheet with some sample data. This is a common mistake with
+        kaggle datasets where the file is actually an Excel file but has a `.csv` extension.
+        The file is located in the `data` directory of this repository.
+        """
 
         if not self.is_testable:
             return

@@ -315,7 +315,7 @@ class AzureMLCluster(AzureMLWorkspace):
             ComputeTarget: The compute cluster
         """
         try:
-            cluster = ComputeTarget.get(workspace=self.workspace, name=self.cluster_name)
+            cluster = self.workspace.compute_targets[self.cluster_name]
             logger.info("Found existing cluster: %s", self.cluster_name)
             return cluster
 

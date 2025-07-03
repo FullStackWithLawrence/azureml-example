@@ -92,7 +92,9 @@ class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
         self.kaggle_dataset = kaggle_dataset
         self.file_name = file_name
         self.description = description
-        self.dataset = self.get_or_create()
+
+        if dataset_name is not None or source_data is not None or kaggle_dataset is not None or file_name is not None:
+            self.dataset = self.get_or_create()
 
     @classmethod
     def get_default_name(cls, workspace: Workspace) -> str:
@@ -161,12 +163,12 @@ class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
             logger.info("Using provided DataFrame with shape: %s", df.shape)
         elif self.kaggle_dataset:
             df = self.from_kaggle()
-            logger.info("Downloaded Kaggle dataset: %s", self.kaggle_dataset)
         elif self.file_name:
             df = self.from_file(self.file_name)
-            logger.info("Loaded dataset from file: %s", self.file_name)
         else:
             raise ValueError("Either source_data or kaggle_dataset or file_name must be provided")
+        if df is None or df.empty:
+            raise ValueError(f"File {self.file_name} does not contain valid data")
 
         # Get default datastore
         datastore = self.workspace.get_default_datastore()
@@ -176,21 +178,21 @@ class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
         # Save DataFrame to temporary CSV file
         with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as temp_file:
             df.to_csv(temp_file.name, index=False)
-            temp_file_path = temp_file.name
-            logger.info("Saved DataFrame to temporary file: %s", temp_file_path)
+            temp_file.close()
+            logger.info("Saved DataFrame to temporary file: %s", temp_file.name)
 
         try:
-            logger.info("Uploading temporary file to datastore: %s", temp_file_path)
+            logger.info("Uploading temporary file to datastore: %s", temp_file.name)
             target_path = f"datasets/{self.dataset_name}/"
 
             # Create a temporary directory with only our CSV file
             with tempfile.TemporaryDirectory() as upload_dir:
                 # Copy our CSV file to the clean upload directory
-                csv_filename = f"{self.dataset_name}.csv"
+                csv_filename = f"{os.path.basename(self.dataset_name)}.csv"
                 upload_file_path = os.path.join(upload_dir, csv_filename)
 
                 # Copy the CSV content to the new file
-                shutil.copy2(temp_file_path, upload_file_path)
+                shutil.copy2(temp_file.name, upload_file_path)
 
                 # Now upload only this clean directory
                 FileDatasetFactory.upload_directory(
@@ -217,7 +219,8 @@ class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
 
         finally:
             # Clean up temporary file
-            os.unlink(temp_file_path)
+            if os.path.exists(temp_file.name):
+                os.unlink(temp_file.name)
 
     def dataset_to_dataframe(self) -> pd.DataFrame:
         """
@@ -273,7 +276,7 @@ class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
         logger.info("Successfully loaded dataset from %s with shape: %s", file_path, df.shape)
         return df
 
-    def from_kaggle(self) -> pd.DataFrame:
+    def from_kaggle(self, dataset: Optional[str] = None) -> pd.DataFrame:
         """
         Download and load a Kaggle dataset as a pandas DataFrame.
 
@@ -287,6 +290,7 @@ class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
         Raises:
             Exception: If dataset download or loading fails
         """
+        self.kaggle_dataset = dataset or self.kaggle_dataset
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 logger.info("Downloading Kaggle dataset: %s", self.kaggle_dataset)

@@ -20,6 +20,16 @@ Note the following:
 
 ## Usage
 
+```console
+python3 -m azure_ai.commands.help
+python3 -m azure_ai.commands.workspace
+python3 -m azure_ai.commands.compute_cluster cluster-name
+python3 -m azure_ai.commands.dataset_from_file maths ~/Desktop/gh/fswl/azureml-example/azure_ai/tests/data/maths.csv
+python3 -m azure_ai.commands.dataset_from_kaggle titanic heptapod/titanic
+```
+
+## Setup
+
 Works with Linux, Windows and macOS environments.
 
 1. Verify project requirements: [Python 3.9](https://www.python.org/), [NPM](https://www.npmjs.com/) [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/). Docker will need around 1 vCPU, 2Gib memory, and 30Gib of storage space.

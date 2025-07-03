@@ -3,6 +3,7 @@ Test script to verify Azure ML installation is working properly.
 """
 
 from azureml_example.automated_ml import AzureMLWorkspace
+
 from .test_base import AzureMLTestBase
 
 

@@ -6,8 +6,12 @@
 # -----------------------------------------------------------------------------
 
 python-dotenv==1.1.1
+pandas==2.3.0
+kaggle==1.7.4.5
+openpyxl==3.1.5
 
 # Azure ML SDK - essential components only
 azureml-core==1.60.0.post1
 azureml-train-core==1.60.0
 azureml-pipeline-core==1.60.0
+azureml-train-automl==1.60.0

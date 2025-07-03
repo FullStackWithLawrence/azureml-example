@@ -3,35 +3,19 @@ Test script to verify Azure ML installation is working properly.
 """
 
 import os
-import unittest
 from logging import getLogger
 
 from dotenv import load_dotenv
+
+from .test_base import AzureMLTestBase
 
 
 load_dotenv()
 logger = getLogger(__name__)
 
 
-class SmarterTestBase(unittest.TestCase):
+class AzureMLTestConfig(AzureMLTestBase):
     """Base class for all unit tests."""
-
-    is_github_actions: bool = bool(os.getenv("GITHUB_ACTIONS", "false").lower() == "true")
-
-    @classmethod
-    def setUpClass(cls):
-        """Set up class-level resources."""
-        logger.info("Setting up class-level resources...")
-
-    @classmethod
-    def tearDownClass(cls):
-        """Clean up class-level resources."""
-        logger.info("Tearing down class-level resources...")
-
-    def setUp(self):
-        """Set up test case resources."""
-        logger.info("Setting up test case: %s", self.id())
-        logger.info("GITHUB_ACTIONS: %s", self.is_github_actions)
 
     # pylint: disable=C0415,W0611,W0401,W0718
     def test_azureml_imports(self):
@@ -63,19 +47,20 @@ class SmarterTestBase(unittest.TestCase):
                 )
 
             try:
-                from azureml.pipeline.steps import PythonScriptStep
+                from azureml.core import Dataset, Experiment, Workspace
+                from azureml.core.compute import AmlCompute, ComputeTarget
+                from azureml.core.compute_target import ComputeTargetException
+                from azureml.core.run import Run
+                from azureml.data.azure_storage_datastore import AzureBlobDatastore
+                from azureml.data.file_dataset import FileDataset
+                from azureml.data.tabular_dataset import TabularDataset
 
                 print("✅ Azure ML Pipeline components imported successfully")
             except ImportError:
-                print("⚠️  Some pipeline components not available (dependency conflicts)")
-                logger.warning(
-                    "PythonScriptStep is not available due to dependency conflicts. "
-                    "Please check your environment setup. "
-                    "This will not prevent running experiments, but some pipeline features may be limited."
+                self.fail(
+                    "Azure ML Pipeline components are not available. "
+                    "Please ensure you have installed the Azure ML SDK with `pip install azureml-sdk[automl]`."
                 )
-
-            # Skip AutoML components as they have dependency issues
-            print("⚠️  AutoML components skipped (has dependency conflicts)")
 
         except ImportError as e:
             print(f"❌ Import error: {e}")
@@ -91,8 +76,8 @@ class SmarterTestBase(unittest.TestCase):
 
     def test_workspace_connection(self):
         """Test workspace connection using config.json."""
-        if self.is_github_actions:
-            print("⚠️  Skipping workspace connection test in GitHub Actions environment")
+
+        if not self.is_testable:
             return
 
         try:

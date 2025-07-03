@@ -46,6 +46,7 @@ Desktop.ini
 .env
 secrets.json
 config.json
+kaggle.json
 *.key
 *.pem
 *.p12

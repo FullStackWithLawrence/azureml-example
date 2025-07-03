@@ -28,7 +28,9 @@ Works with Linux, Windows and macOS environments.
 
 3. Add your Azure `config.json` to the root of this project. See [Azure ML Configuration Guide](./docs/AZURE_ML_CONFIG.md) for detailed instructions on setting up an Azure Workspace and Subscription, and downloading your `config.json` file.
 
-4. Initialize, build and run the application locally.
+4. Add your Kaggle Api key to [.kaggle/kaggle.json](./.kaggle/kaggle.json), which you can generate from [https://www.kaggle.com/settings/account](https://www.kaggle.com/settings/account).
+
+5. Initialize, build and run the application locally.
 
 ```console
 git clone https://github.com/FullStackWithLawrence/azureml-example.git

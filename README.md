@@ -8,7 +8,13 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-Demonstrate basic usage of Azure Machine Learning's [Automated ML](https://azure.microsoft.com/en-us/solutions/automated-machine-learning) service.
+Demonstrate basic usage of Azure Machine Learning's [Automated ML](https://azure.microsoft.com/en-us/solutions/automated-machine-learning) service. Implements the following:
+
+- `AzureAIMLWorkspace`: Azure AI ML Studio workspace helper class. generates an authenticated instance of a workspace.
+- `AzureAIMLAssetsDataset`: Azure AI ML Studio data set. Provides helpers for managing ML Studio data sets, and for porting to/from kaggle data sets and local csv and Excel files.
+- `AzureAIMLStudioComputeCluster`: Azure AI ML Studio Compute - compute cluster object with helpers for instantitation.
+- `AzureAIMLStudioAssetsBatchEndpoint`: Azure AI ML Studio Assets - batch end point. Providers helpers for managing end points.
+- `AzureAIMLStudioAuthoringAutomatedML`: Azure AI ML Studio Authoring - Automated ML. Helper class for managing life cycle of 'automated ml' jobs.
 
 Note the following:
 

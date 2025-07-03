@@ -70,7 +70,7 @@ clean:
 	rm -rf venv node_modules azure_ai/__pycache__ package-lock.json
 
 analyze:
-	cloc . --exclude-ext=svg,json,zip,csv --vcs=git
+	cloc . --exclude-ext=svg,json,zip,csv,yml,yaml --vcs=git
 
 release:
 	git commit -m "fix: force a new release" --allow-empty && git push

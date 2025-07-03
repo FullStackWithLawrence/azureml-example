@@ -2,7 +2,15 @@
 Lawrence McDaniel
 https://lawrencemcdaniel.com
 
-Basic Azure ML example showing how to connect to workspace and create experiments.
+Basic Azure ML example showing how to
+- Connect to Azure ML workspace
+- Create a dataset from a pandas DataFrame or Kaggle dataset
+- Create a compute cluster
+- Create a batch endpoint for model inference
+- Run an AutoML experiment
+- Register the best model from AutoML
+- Invoke batch inference job on the endpoint
+- Delete the dataset, compute cluster, and batch endpoint
 """
 
 import glob

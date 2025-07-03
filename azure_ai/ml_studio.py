@@ -11,10 +11,9 @@ from typing import Optional, Union
 
 import kaggle
 import pandas as pd
-from azure.ai.ml import Input, MLClient
+from azure.ai.ml import Input, MLClient, Output
 from azure.ai.ml.entities import (
     BatchEndpoint,
-    BatchJob,
     BatchRetrySettings,
     ModelBatchDeployment,
 )
@@ -632,7 +631,7 @@ class AzureAIMLStudioAssetsBatchEndpoint(AzureAIMLWorkspace):
             # Create outputs configuration if provided
             outputs = None
             if output_data_path:
-                outputs = {"output_data": Input(type="uri_folder", path=output_data_path)}
+                outputs = {"output_data": Output(type="uri_file", path=output_data_path)}
 
             # Submit the batch job using the invoke method
             job = self.ml_client.batch_endpoints.invoke(

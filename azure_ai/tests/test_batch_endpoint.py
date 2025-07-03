@@ -117,6 +117,7 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
         batch_endpoint = AzureAIMLStudioAssetsBatchEndpoint(
             endpoint_name=self.endpoint_name,
             model_name=self.model_name,
+            description=self.description + " - test_batch_job_invocation()",
         )
 
         test_dataset = AzureAIMLAssetsDataset(

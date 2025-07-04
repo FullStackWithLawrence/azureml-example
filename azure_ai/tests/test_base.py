@@ -32,19 +32,22 @@ class AzureMLTestBase(unittest.TestCase):
     def tearDownClass(cls):
         """Clean up class-level resources."""
         if not cls.is_testable:
-            # Stop all patches
-            patchers = [
-                "ml_client_patcher",
-                "credential_patcher",
-                "dataset_v2_patcher",
-                "workspace_patcher",
-                "dataset_v1_patcher",
-                "compute_patcher",
-                "experiment_patcher",
-            ]
-            for patcher_name in patchers:
-                if hasattr(cls, patcher_name):
-                    getattr(cls, patcher_name).stop()
+            try:
+                patchers = [
+                    "ml_client_patcher",
+                    "credential_patcher",
+                    "dataset_v2_patcher",
+                    "workspace_patcher",
+                    "dataset_v1_patcher",
+                    "compute_patcher",
+                    "experiment_patcher",
+                ]
+                for patcher_name in patchers:
+                    if hasattr(cls, patcher_name):
+                        getattr(cls, patcher_name).stop()
+            # pylint: disable=W0718
+            except Exception as e:
+                logger.error(f"Error during tearDownClass: {e}")
 
     @classmethod
     def _setup_azure_mocks(cls):

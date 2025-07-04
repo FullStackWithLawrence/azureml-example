@@ -1,7 +1,7 @@
 # Azure Machine Learning - Automated ML Example
 
-[![AzureML](https://a11ybadges.com/badge?logo=azure)](https://azure.microsoft.com/en-us/products/machine-learning/)
-[![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
+[![AzureML](https://a11ybadges.com/badge?logo=microsoft)](https://azure.microsoft.com/en-us/products/machine-learning/)
+[![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)<br>
 [![Unit Tests](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/test.yml)
 ![Release Status](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/release.yml/badge.svg?branch=main)
 ![Auto Assign](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/auto-assign.yml/badge.svg)

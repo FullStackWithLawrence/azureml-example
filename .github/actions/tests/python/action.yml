@@ -36,7 +36,7 @@ runs:
       shell: bash
       run: |
         mkdir -p ~/.kaggle
-        echo "${{ inputs.kaggle-json }}" | base64 --decode > ~/.kaggle/kaggle.json
+        echo '${{ inputs.kaggle-json }}' > ~/.kaggle/kaggle.json
         chmod 600 ~/.kaggle/kaggle.json
 
     - name: Check for azureml-core in requirements

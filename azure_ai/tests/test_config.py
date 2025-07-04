@@ -78,6 +78,7 @@ class AzureMLTestConfig(AzureMLTestBase):
         """Test workspace connection using config.json."""
 
         if not self.is_testable:
+            logger.warning("Skipping test_workspace_connection() as the environment is not testable.")
             return
 
         try:

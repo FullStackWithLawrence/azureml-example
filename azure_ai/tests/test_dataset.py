@@ -3,6 +3,7 @@ Test script to verify Azure ML installation is working properly.
 """
 
 import os
+from logging import getLogger
 
 from azure_ai.ml_studio import AzureAIMLAssetsDataset
 
@@ -10,6 +11,7 @@ from .test_base import AzureMLTestBase
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+logger = getLogger(__name__)
 
 
 class AzureMLTestDataset(AzureMLTestBase):
@@ -18,6 +20,7 @@ class AzureMLTestDataset(AzureMLTestBase):
     def test_existing_dataset(self):
         """Test that we can create and use an Azure ML workspace."""
         if not self.is_testable:
+            logger.warning("Skipping test_existing_dataset() as the environment is not testable.")
             return
 
         dataset = AzureAIMLAssetsDataset(
@@ -31,6 +34,7 @@ class AzureMLTestDataset(AzureMLTestBase):
         https://www.kaggle.com/datasets/whenamancodes/student-performance
         """
         if not self.is_testable:
+            logger.warning("Skipping test_kaggle_dataset() as the environment is not testable.")
             return
 
         dataset = AzureAIMLAssetsDataset(
@@ -50,6 +54,7 @@ class AzureMLTestDataset(AzureMLTestBase):
         """
 
         if not self.is_testable:
+            logger.warning("Skipping test_file_dataset() as the environment is not testable.")
             return
 
         dataset = AzureAIMLAssetsDataset(

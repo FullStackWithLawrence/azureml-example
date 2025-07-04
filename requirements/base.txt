@@ -15,6 +15,7 @@ azureml-core==1.60.0.post1
 azureml-train-core==1.60.0
 azureml-pipeline-core==1.60.0
 azureml-train-automl==1.60.0
+azureml-widgets==1.60.0
 
 # Azure AI SDK - essential components only
 azure-ai-ml==1.27.1

@@ -4,6 +4,8 @@
 
 This guide walks you through setting up a complete Azure environment from scratch to run AutomatedML jobs successfully. Follow these steps in order to avoid common quota and configuration issues.
 
+**Note: This guide uses a combination of both web console steps, and also command-line interface instructions.**
+
 ## 🚀 Step 1: Create Azure Account
 
 ### New Users
@@ -23,7 +25,7 @@ This guide walks you through setting up a complete Azure environment from scratc
 
 ### Check Current Subscriptions Using CLI
 
-```bash
+```console
 az login
 az account list --output table
 ```
@@ -38,7 +40,7 @@ az account list --output table
 
 ### Set Active Subscription Using CLI
 
-```bash
+```console
 az account set --subscription "your-subscription-name"
 ```
 
@@ -55,7 +57,7 @@ az account set --subscription "your-subscription-name"
 
 ### Create Resource Group Using CLI
 
-```bash
+```console
 az group create --name automl-resources --location eastus2
 ```
 
@@ -77,7 +79,7 @@ az group create --name automl-resources --location eastus2
 
 ### Create Workspace Using CLI
 
-```bash
+```console
 az ml workspace create \
   --name automl-workspace \
   --resource-group automl-resources \
@@ -88,7 +90,7 @@ az ml workspace create \
 
 ### Install on macOS
 
-```bash
+```console
 # Install Azure CLI
 brew install azure-cli
 
@@ -101,7 +103,7 @@ az config set extension.dynamic_install_allow_preview=true
 
 ### Install on Linux
 
-```bash
+```console
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 az extension add --name ml
 ```
@@ -116,7 +118,7 @@ az extension add --name ml
 
 ### Verify Installation
 
-```bash
+```console
 az --version
 az ml --help
 ```
@@ -125,7 +127,7 @@ az ml --help
 
 Azure ML requires several resource providers to be registered:
 
-```bash
+```console
 # Core providers for Azure ML
 az provider register --namespace Microsoft.MachineLearningServices
 az provider register --namespace Microsoft.Compute
@@ -143,7 +145,7 @@ az provider list --query "[?namespace=='Microsoft.MachineLearningServices' || na
 
 ### Create Compute Cluster Using CLI
 
-```bash
+```console
 az ml compute create \
   --name automl-cluster \
   --type amlcompute \
@@ -157,7 +159,7 @@ az ml compute create \
 
 ### Verify Cluster Creation
 
-```bash
+```console
 az ml compute show \
   --name automl-cluster \
   --resource-group automl-resources \
@@ -179,7 +181,7 @@ az ml compute show \
 
 ### Check Current Quotas
 
-```bash
+```console
 # Check your region's compute quotas
 az vm list-usage --location eastus2 --query "[?contains(name.value, 'Standard')]" --output table
 ```
@@ -206,7 +208,7 @@ az vm list-usage --location eastus2 --query "[?contains(name.value, 'Standard')]
 
 ### Request Quota Increase Using Support Ticket
 
-```bash
+```console
 # This creates a support ticket for quota increase
 az support tickets create \
   --ticket-name "AutoML Compute Quota Increase" \
@@ -226,7 +228,7 @@ az support tickets create \
 
 Once your quota is approved, update your cluster:
 
-```bash
+```console
 # Update cluster to use new quota limits
 az ml compute update \
   --name automl-cluster \
@@ -238,7 +240,7 @@ az ml compute update \
 
 ### Verify Cluster Update
 
-```bash
+```console
 az ml compute show \
   --name automl-cluster \
   --resource-group automl-resources \
@@ -287,20 +289,20 @@ Requested 2 nodes but AzureMLCompute cluster only has 1 maximum nodes.
 
 ### Issue 2: Resource Provider Not Registered
 
-```
+```console
 The selected provider is not registered for some of the selected subscriptions.
 ```
 
 **Solution:**
 
-```bash
+```console
 az provider register --namespace Microsoft.MachineLearningServices
 az provider register --namespace Microsoft.Compute
 ```
 
 ### Issue 3: Workspace Not Found
 
-```
+```console
 ParentResourceNotFound: Failed to perform 'read' on resource
 ```
 
@@ -312,13 +314,13 @@ ParentResourceNotFound: Failed to perform 'read' on resource
 
 ### Issue 4: Authentication Errors
 
-```
+```console
 AuthenticationException: Authentication failed
 ```
 
 **Solution:**
 
-```bash
+```console
 az login
 az account set --subscription "your-subscription-name"
 ```
@@ -340,7 +342,7 @@ az account set --subscription "your-subscription-name"
 3. **Monitor usage**: Set up billing alerts
 4. **Delete resources**: Remove test resources when done
 
-```bash
+```console
 # Set up auto-scale down after 5 minutes
 az ml compute update \
   --name automl-cluster \

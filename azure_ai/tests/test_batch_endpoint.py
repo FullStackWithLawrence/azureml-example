@@ -30,7 +30,9 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
         hash_suffix = hashlib.sha256(datetime.now().isoformat().encode()).hexdigest()[:8]
         cls.endpoint_name = "test-batch-endpoint" + "-" + hash_suffix
         cls.model_name = "best-01"  # FIX NOTE: need to create a temporary model that we can destroy after the test
-        cls.compute_target_name = "standard-cluster"  # FIX NOTE: need to create a temporary compute cluster that we can destroy after the test
+        cls.compute_target_name = (
+            "tiny-cluster"  # FIX NOTE: need to create a temporary compute cluster that we can destroy after the test
+        )
         cls.description = "Custom test batch endpoint"
 
     @classmethod

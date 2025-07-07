@@ -20,12 +20,12 @@ class AzureMLTestCluster(AzureMLTestBase):
     def test_existing_cluster(self):
         """
         Test that we can create and use an Azure ML workspace.
-        This will get a cluster named "standard-cluster" if it exists,
+        This will get a cluster named "tiny-cluster" if it exists,
         or create it if it does not.
         """
         if not self.is_testable:
             logger.warning("Skipping test_existing_cluster() as the environment is not testable.")
             return
 
-        cluster = AzureAIMLStudioComputeCluster(cluster_name="standard-cluster")
+        cluster = AzureAIMLStudioComputeCluster(cluster_name="tiny-cluster")
         self.assertIsInstance(cluster, AzureAIMLStudioComputeCluster)

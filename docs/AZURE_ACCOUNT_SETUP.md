@@ -147,10 +147,10 @@ az provider list --query "[?namespace=='Microsoft.MachineLearningServices' || na
 
 ```console
 az ml compute create \
-  --name automl-cluster \
+  --name tiny-cluster \
   --type amlcompute \
   --size Standard_D4s_v3 \
-  --max-instances 4 \
+  --max-instances 1 \
   --min-instances 0 \
   --idle-time-before-scale-down 300 \
   --resource-group automl-resources \
@@ -161,7 +161,7 @@ az ml compute create \
 
 ```console
 az ml compute show \
-  --name automl-cluster \
+  --name tiny-cluster \
   --resource-group automl-resources \
   --workspace-name automl-workspace \
   --query "{size:size, location:location, maxInstances:scaleSettings.maxNodeCount}"
@@ -231,10 +231,10 @@ Once your quota is approved, update your cluster:
 ```console
 # Update cluster to use new quota limits
 az ml compute update \
-  --name automl-cluster \
+  --name tiny-cluster \
   --resource-group automl-resources \
   --workspace-name automl-workspace \
-  --max-instances 8 \
+  --max-instances 2 \
   --min-instances 0
 ```
 
@@ -242,7 +242,7 @@ az ml compute update \
 
 ```console
 az ml compute show \
-  --name automl-cluster \
+  --name tiny-cluster \
   --resource-group automl-resources \
   --workspace-name automl-workspace \
   --query "scaleSettings"
@@ -269,7 +269,7 @@ ws = Workspace.from_config()
 print(f"✅ Connected to workspace: {ws.name}")
 
 # Test compute target
-compute_target = ws.compute_targets["automl-cluster"]
+compute_target = ws.compute_targets["tiny-cluster"]
 print(f"✅ Compute cluster ready: {compute_target.provisioning_state}")
 ```
 
@@ -345,7 +345,7 @@ az account set --subscription "your-subscription-name"
 ```console
 # Set up auto-scale down after 5 minutes
 az ml compute update \
-  --name automl-cluster \
+  --name tiny-cluster \
   --idle-time-before-scale-down 300 \
   --resource-group automl-resources \
   --workspace-name automl-workspace

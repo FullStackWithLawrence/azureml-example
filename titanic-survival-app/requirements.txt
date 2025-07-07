@@ -1,0 +1,9 @@
+"""
+# titanic-survival-app/requirements.txt
+# This file contains the Python package dependencies for the Azure Function App
+# that serves the Titanic dataset model.
+"""
+azure-functions
+pandas
+numpy
+scikit-learn

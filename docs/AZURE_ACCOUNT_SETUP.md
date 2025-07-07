@@ -134,9 +134,20 @@ az provider register --namespace Microsoft.Compute
 az provider register --namespace Microsoft.Storage
 az provider register --namespace Microsoft.KeyVault
 az provider register --namespace Microsoft.ContainerInstance
+az provider register --namespace Microsoft.ContainerRegistry
+az provider register --namespace Microsoft.ContainerService
+
+# Additional providers for real-time endpoints
+az provider register --namespace Microsoft.Web
+az provider register --namespace Microsoft.Network
+az provider register --namespace Microsoft.Authorization
+az provider register --namespace Microsoft.Insights
+az provider register --namespace Microsoft.OperationalInsights
+az provider register --namespace Microsoft.Resources
+
 
 # Check registration status
-az provider list --query "[?namespace=='Microsoft.MachineLearningServices' || namespace=='Microsoft.Compute' || namespace=='Microsoft.Storage'].{Namespace:namespace, State:registrationState}" --output table
+az provider list --query "[?namespace=='Microsoft.MachineLearningServices' || namespace=='Microsoft.Compute' || namespace=='Microsoft.Storage' || namespace=='Microsoft.ContainerService' || namespace=='Microsoft.Web' || namespace=='Microsoft.Network' || namespace=='Microsoft.Authorization' || namespace=='Microsoft.Insights' || namespace=='Microsoft.OperationalInsights' || namespace=='Microsoft.Resources'].{Namespace:namespace, State:registrationState}" --output table
 ```
 
 **Note**: Registration can take 5-10 minutes. Wait for all to show "Registered" before proceeding.
@@ -188,12 +199,23 @@ az vm list-usage --location eastus2 --query "[?contains(name.value, 'Standard')]
 
 ### Common Quota Requirements for AutoML
 
-| VM Family                  | Recommended Quota | Use Case               |
-| -------------------------- | ----------------- | ---------------------- |
-| Standard DSv3 Family vCPUs | 2-10              | General AutoML jobs    |
-| Standard Dv3 Family vCPUs  | 16-32             | CPU-intensive training |
-| Standard FSv2 Family vCPUs | 16-32             | Fast compute jobs      |
-| Total Regional vCPUs       | 50-100            | Overall regional limit |
+| VM Family                       | Recommended Quota | Use Case                |
+| ------------------------------- | ----------------- | ----------------------- |
+| Standard DSv3 Family vCPUs      | 2-10              | General AutoML jobs     |
+| **Standard DASv4 Family vCPUs** | **4-10**          | **Real-time endpoints** |
+| Standard Dv3 Family vCPUs       | 16-32             | CPU-intensive training  |
+| Standard FSv2 Family vCPUs      | 16-32             | Fast compute jobs       |
+| Total Regional vCPUs            | 50-100            | Overall regional limit  |
+
+### Check Endpoint VM Quotas
+
+```console
+# Check quota for endpoint VMs (different from training compute)
+az vm list-usage --location eastus2 --query "[?contains(name.value, 'DASv4')]" --output table
+
+# Common endpoint VM families
+az vm list-usage --location eastus2 --query "[?contains(name.value, 'DASv4') || contains(name.value, 'DSv3') || contains(name.value, 'Dv3')]" --output table
+```
 
 ### Request Quota Increase in Azure Portal
 
@@ -325,6 +347,31 @@ az login
 az account set --subscription "your-subscription-name"
 ```
 
+### Issue 5: Troubleshooting Endpoint Creation
+
+If endpoint creation fails with "invalid request" errors, try these solutions:
+
+````console
+# 1. Use same VM family as training cluster
+az ml online-endpoint create \
+  --name titanic-test \
+  --auth-mode key \
+  --resource-group automl-resources \
+  --workspace-name automl-workspace
+
+# 2. Deploy with DSv3 family (same as training)
+az ml online-deployment create \
+  --name blue \
+  --endpoint-name titanic-test \
+  --model azureml:your-model-name@latest \
+  --instance-type Standard_D2s_v3 \
+  --instance-count 1 \
+  --resource-group automl-resources \
+  --workspace-name automl-workspace
+
+# 3. Alternative: Use Azure ML Studio interface
+# Go to ml.azure.com → Models → Deploy → Real-time endpoint
+
 ## 💰 Cost Management
 
 ### Estimated Costs for AutoML
@@ -349,7 +396,7 @@ az ml compute update \
   --idle-time-before-scale-down 300 \
   --resource-group automl-resources \
   --workspace-name automl-workspace
-```
+````
 
 ## ✅ Validation Checklist
 

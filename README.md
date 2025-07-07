@@ -42,17 +42,19 @@ Works with Linux, Windows and macOS environments.
 
 2. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
 
-3. Add your Azure `config.json` to the root of this project. See [Azure ML Configuration Guide](./docs/AZURE_ML_CONFIG.md) for detailed instructions on setting up an Azure Workspace and Subscription, and downloading your `config.json` file.
+3. Create an Azure account. See this summary for account configuration important details that you'll need to address in order for Azure AI AutomatedML batch jobs to run correctly: [Azure Account Setup for AutoML](./docs/AZURE_ACCOUNT_SETUP.md)
 
-4. Add your Kaggle Api key to [.kaggle/kaggle.json](./.kaggle/kaggle.json), which you can generate from [https://www.kaggle.com/settings/account](https://www.kaggle.com/settings/account).
+4. Add your Azure `config.json` to the root of this project. See [Azure ML Configuration Guide](./docs/AZURE_ML_CONFIG.md) for detailed instructions on setting up an Azure Workspace and Subscription, and downloading your `config.json` file.
 
-5. Install and configure Azure cli. On Mac `brew install azure-cli`. On Windows download from [https://aka.ms/installazurecliwindows](https://aka.ms/installazurecliwindows).
+5. Add your Kaggle Api key to [.kaggle/kaggle.json](./.kaggle/kaggle.json), which you can generate from [https://www.kaggle.com/settings/account](https://www.kaggle.com/settings/account).
+
+6. Install and configure Azure cli. On Mac `brew install azure-cli`. On Windows download from [https://aka.ms/installazurecliwindows](https://aka.ms/installazurecliwindows).
 
    - `az login`
    - `az account list --output table`
    - `az account set --subscription "your-subscription-id-or-name"`
 
-6. Initialize, build and run the application locally.
+7. Initialize, build and run the application locally.
 
 ```console
 git clone https://github.com/FullStackWithLawrence/azureml-example.git

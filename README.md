@@ -16,6 +16,8 @@ Demonstrate basic usage of Azure Machine Learning's [Automated ML](https://azure
 - `AzureAIMLStudioAssetsBatchEndpoint`: Azure AI ML Studio Assets - batch end point. Providers helpers for managing end points.
 - `AzureAIMLStudioAuthoringAutomatedML`: Azure AI ML Studio Authoring - Automated ML. Helper class for managing life cycle of 'automated ml' jobs.
 
+There is also an [example production deployment](./titanic-survival-app/) of a model created using AutomatedML. See important deployment details, [here](./docs/AZURE_DEPLOYMENT.md).
+
 Note the following:
 
 1. Model training is a computationally intensive task and it is not free. You'll need a paid [Azure Subscription](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account). Expect to spend in the neighborhood of $0.10/per hour ($USD) when training models.

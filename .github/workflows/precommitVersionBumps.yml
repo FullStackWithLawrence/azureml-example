@@ -26,11 +26,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout next branch
+      - name: Checkout alpha branch
         run: |
           git fetch
-          git checkout next
-          git pull origin next
+          git checkout alpha
+          git pull origin alpha
 
       - name: Cache NPM dependencies
         uses: actions/cache@v4

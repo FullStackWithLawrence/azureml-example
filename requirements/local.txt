@@ -7,7 +7,7 @@
 
 -r base.txt
 
-azure.functions==1.23.0
+azure.functions==1.23.0   # used for linting code in ./titanic-survival-app/__init__.py
 
 # Code linters, formatters, and security scanners
 # ------------

@@ -94,6 +94,19 @@ az ml compute create \
   --idle-time-before-scale-down 120
 ```
 
+```console
+# Create a GPU cluster. Warning: you might encounter quota availability problems depending on the region.
+az ml compute create \
+  --name gpu-cluster \
+  --type AmlCompute \
+  --resource-group ubc-cdl10 \
+  --workspace-name UBC-CDL10 \
+  --size STANDARD_NC4AS_T4_V3 \
+  --min-instances 0 \
+  --max-instances 1 \
+  --idle-time-before-scale-down 120
+```
+
 **Why Standard_D2s_v3?**
 
 - ✅ 2 vCPUs, 8GB RAM - perfect for small datasets

@@ -78,6 +78,7 @@ __pycache__
 .pytest_cache
 venv
 .venv
+venv3.12
 .pytest_cache
 *.pyc
 *.pyo

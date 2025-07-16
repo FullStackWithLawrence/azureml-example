@@ -8,6 +8,10 @@
 python-dotenv==1.1.1    # for loading environment variables from .env files
 pandas==1.5.3           # for data manipulation
 kaggle==1.7.4.5         # for Kaggle api access
+seaborn==0.13.2         # for data visualization
+scikit-learn==1.5.1     # for machine learning algorithms
+scipy==1.10.1           # for scientific computing
+shap==0.43.0            # for model interpretability
 openpyxl==3.1.5         # for Excel file support from kaggle datasets
 
 # Azure ML SDK - essential components only

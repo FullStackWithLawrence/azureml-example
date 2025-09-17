@@ -100,4 +100,4 @@ jobs:
           git config --local user.name "GitHub Action"
           git add .pre-commit-config.yaml
           git commit -m "chore: [gh] version bumps in .pre-commit-config.yaml [skip ci]"
-          git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:next
+          git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:alpha

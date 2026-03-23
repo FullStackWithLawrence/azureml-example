@@ -8032,10 +8032,10 @@ Testing samples: 56962
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [28]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Use the testing data, which we had previously set aside for evaluation, to get a score for the performance of the trained model.</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1">#Use the testing data, which we had previously set aside for evaluation, to get a score for the performance of the train</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">classification_report</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
 </pre></div>
@@ -8104,7 +8104,7 @@ weighted avg       1.00      1.00      1.00     56962
 <h5 id="Interpretation-(In-Simple-Terms)">Interpretation (In Simple Terms)<a class="anchor-link" href="#Interpretation-(In-Simple-Terms)">¶</a></h5><ul>
 <li>The model is <strong>excellent at recognizing normal transactions</strong> — it almost never makes a mistake with those.</li>
 <li>However, it <strong>struggles to correctly catch fraud</strong>:<ul>
-<li>When it says a transaction is fraud, it’s <strong>only right 33% of the time</strong>.</li>
+<li>When it says a transaction is fraud, it’s <strong>only right 32% of the time</strong>.</li>
 <li>It <strong>only finds 33% of the real fraud cases</strong> — it misses most of them.</li>
 </ul>
 </li>

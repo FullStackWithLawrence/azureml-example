@@ -36,7 +36,6 @@ jobs:
           target-branch: beta
 
   semantic-release:
-    needs: merge-main-to-dev-branches
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.PAT }}

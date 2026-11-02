@@ -15,7 +15,7 @@ shap==0.51.0            # for model interpretability
 openpyxl==3.1.5         # for Excel file support from kaggle datasets
 
 # Azure ML SDK - essential components only
-azureml-core==1.60.0.post1
+azureml-core==1.61.0.post4
 azureml-train-core==1.62.0
 azureml-pipeline-core==1.60.0
 azureml-train-automl==1.60.0

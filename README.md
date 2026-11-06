@@ -19,7 +19,12 @@ Demonstrate basic usage of Azure Machine Learning's [Automated ML](https://azure
 
 There is also an [example production deployment](./titanic-survival-app/) of a model created using AutomatedML. See important deployment details, [here](./docs/AZURE_DEPLOYMENT.md).
 
-New to Azure ML Studio, Kaggle or Docker? Read the illustrated walkthrough of this repository, [Getting Started With Azure ML Studio Using Python](https://blog.smarter.sh/2026/11/06/azure-ml-studio-automl-python-getting-started/).
+> [!TIP]
+>
+> ## 📖 New to Azure ML Studio, Kaggle or Docker? Start here
+>
+> Read the illustrated, step-by-step walkthrough of this repository:
+> **[Getting Started With Azure ML Studio Using Python](https://blog.smarter.sh/2026/11/06/azure-ml-studio-automl-python-getting-started/)**
 
 Note the following:
 

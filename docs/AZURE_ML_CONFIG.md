@@ -94,7 +94,7 @@ ml_client = MLClient(
 
 `DefaultAzureCredential` also picks up `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` and
 `AZURE_CLIENT_SECRET` from the environment by itself, so the helper classes in
-`azure_ai/ml_studio.py` work with a service principal without code changes.
+`azure_ai/ml_studio/` work with a service principal without code changes.
 
 ## 📥 How to Download config.json
 

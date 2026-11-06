@@ -52,17 +52,17 @@ holds only what applies to nearly every task.
 
 ## Repository map
 
-| Path                    | Contents                                                                         |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| `azure_ai/ml_studio.py` | The helper classes: workspace, dataset, compute cluster, batch endpoint, AutoML  |
-| `azure_ai/commands/`    | Small command-line entry points, run as `python3 -m azure_ai.commands.<name>`    |
-| `azure_ai/tests/`       | `unittest` tests, `AzureMLTestBase`, test data in `tests/data/`                  |
-| `titanic-survival-app/` | An Azure Function that serves a downloaded AutoML model over HTTP                |
-| `jupyter/`              | Course notebooks, with their own `requirements.txt`                              |
-| `docs/`                 | Markdown guides: account setup, workspace config, AutoML, deployment, Azure CLI  |
-| `requirements/`         | `base.txt` (shared pins), `local.txt` (dev tools), `prod.txt` (Docker and CI)    |
-| `.github/workflows/`    | Tests on pull requests, semantic-release on `main`, version bumps on alpha, beta |
-| `skills/`               | Agent Skills for developing this repository                                      |
+| Path                    | Contents                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `azure_ai/ml_studio/`   | The helper classes, one module each: workspace, dataset, compute cluster, batch endpoint, AutoML |
+| `azure_ai/commands/`    | Small command-line entry points, run as `python3 -m azure_ai.commands.<name>`                    |
+| `azure_ai/tests/`       | `unittest` tests, `AzureMLTestBase`, test data in `tests/data/`                                  |
+| `titanic-survival-app/` | An Azure Function that serves a downloaded AutoML model over HTTP                                |
+| `jupyter/`              | Course notebooks, with their own `requirements.txt`                                              |
+| `docs/`                 | Markdown guides: account setup, workspace config, AutoML, deployment, Azure CLI                  |
+| `requirements/`         | `base.txt` (shared pins), `local.txt` (dev tools), `prod.txt` (Docker and CI)                    |
+| `.github/workflows/`    | Tests on pull requests, semantic-release on `main`, version bumps on alpha, beta                 |
+| `skills/`               | Agent Skills for developing this repository                                                      |
 
 ## Common commands
 
@@ -93,7 +93,7 @@ git diff --name-only | xargs pre-commit run --files
   `argparse` command modules, the `is_testable` guard in tests.
 - **Logging** uses `logger = getLogger(__name__)` and lazy %-style arguments
   (`logger.info("Found cluster: %s", name)`), never f-strings.
-- **Docstrings** use the Google style already in `ml_studio.py` (`Args:`,
+- **Docstrings** use the Google style already in `azure_ai/ml_studio/` (`Args:`,
   `Returns:`, `Raises:`), and every public class and function has one.
 - **Docs** are Markdown in `docs/`. Weave new material into the existing guide
   it belongs to rather than adding a "what's new" section.

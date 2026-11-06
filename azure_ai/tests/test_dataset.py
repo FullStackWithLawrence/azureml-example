@@ -157,7 +157,7 @@ class AzureMLTestDataset(AzureMLTestBase):
         )
         dataset = AzureAIMLAssetsDataset(dataset_name="maths")
 
-        with patch("azure_ai.ml_studio.ContainerClient") as mock_container_class:
+        with patch("azure_ai.ml_studio.assets_dataset.ContainerClient") as mock_container_class:
             container = mock_container_class.return_value
             container.list_blobs.return_value = [
                 SimpleNamespace(name="LocalUpload/abc123/maths/MLTable"),
@@ -193,7 +193,7 @@ class AzureMLTestDataset(AzureMLTestBase):
         )
         dataset = AzureAIMLAssetsDataset(dataset_name="titanic")
 
-        with patch("azure_ai.ml_studio.ContainerClient") as mock_container_class:
+        with patch("azure_ai.ml_studio.assets_dataset.ContainerClient") as mock_container_class:
             container = mock_container_class.return_value
             container.list_blobs.return_value = [SimpleNamespace(name="UI/2025-07-04/train.csv")]
             container.download_blob.return_value.readall.return_value = b"x,y\n1,2\n"
@@ -245,7 +245,7 @@ class AzureMLTestDataset(AzureMLTestBase):
         )
         dataset = AzureAIMLAssetsDataset(dataset_name="maths")
 
-        with patch("azure_ai.ml_studio.ContainerClient") as mock_container_class:
+        with patch("azure_ai.ml_studio.assets_dataset.ContainerClient") as mock_container_class:
             mock_container_class.return_value.list_blobs.return_value = [
                 SimpleNamespace(name="LocalUpload/abc123/maths/MLTable")
             ]
@@ -305,7 +305,7 @@ class AzureMLTestDataset(AzureMLTestBase):
 
         ml_client.data.create_or_update.side_effect = capture_upload
 
-        with patch("azure_ai.ml_studio.kaggle") as mock_kaggle:
+        with patch("azure_ai.ml_studio.assets_dataset.kaggle") as mock_kaggle:
             mock_kaggle.api.dataset_download_files.side_effect = fake_kaggle_download(
                 {"train.csv": "Age,Fare\n22,7.25\n"}
             )
@@ -322,7 +322,7 @@ class AzureMLTestDataset(AzureMLTestBase):
         self.mock_azure()
         dataset = AzureAIMLAssetsDataset(dataset_name="titanic")
 
-        with patch("azure_ai.ml_studio.kaggle") as mock_kaggle:
+        with patch("azure_ai.ml_studio.assets_dataset.kaggle") as mock_kaggle:
             mock_kaggle.api.dataset_download_files.side_effect = fake_kaggle_download({"README.md": "no data here"})
             with self.assertRaises(ValueError):
                 dataset.from_kaggle("someone/no-csv")
@@ -385,7 +385,7 @@ class AzureMLTestDataset(AzureMLTestBase):
         ml_client = self.mock_azure()
         dataset = AzureAIMLAssetsDataset(dataset_name="maths")
 
-        with patch("azure_ai.ml_studio.ContainerClient") as mock_container_class:
+        with patch("azure_ai.ml_studio.assets_dataset.ContainerClient") as mock_container_class:
             ml_client.datastores.get.return_value = AzureBlobDatastore(
                 name="sas-store",
                 account_name="mystorage",
@@ -398,7 +398,7 @@ class AzureMLTestDataset(AzureMLTestBase):
             ml_client.datastores.get.return_value = AzureBlobDatastore(
                 name="identity-store", account_name="mystorage", container_name="mycontainer"
             )
-            with patch("azure_ai.ml_studio.DefaultAzureCredential") as mock_credential_class:
+            with patch("azure_ai.ml_studio.assets_dataset.DefaultAzureCredential") as mock_credential_class:
                 dataset.get_datastore_container("identity-store")
             self.assertIs(mock_container_class.call_args.kwargs["credential"], mock_credential_class.return_value)
 

@@ -31,7 +31,7 @@ class AzureMLTestWorkspace(AzureMLTestBase):
         self.mock_azure()
         error = ValidationException(message="config.json not found", no_personal_data_message="config.json not found")
 
-        with patch("azure_ai.ml_studio.MLClient.from_config", side_effect=error):
+        with patch("azure_ai.ml_studio.workspace.MLClient.from_config", side_effect=error):
             with self.assertRaises(ValidationException):
                 AzureAIMLWorkspace()
 

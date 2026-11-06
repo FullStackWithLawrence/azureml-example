@@ -105,28 +105,46 @@ func azure functionapp publish <function-app-name>
 
 ### Step 6: Test Your Deployment
 
-The function requires a function key. Get it from the Azure portal (your Function App -> Functions -> predict -> Function Keys), and keep it out of code and documentation.
+The function requires a function key. Get it from the Azure portal (your Function App -> Functions -> predict -> Function Keys), or with the Azure CLI, and keep it out of code and documentation:
 
-Send one object per passenger, keyed by the model's column names (Step 2):
+```console
+az functionapp function keys list --resource-group <resource-group> --name <function-app-name> --function-name predict --query default -o tsv
+```
+
+Send one object per passenger, keyed by the model's column names (Step 2). A model trained on heptapod/titanic expects its numeric columns, `Passengerid`, `Age`, `Fare`, `Sex` (0 male, 1 female), `sibsp`, `Parch`, `Pclass` and `Embarked`, plus the dataset's empty columns `zero` and `zero_1` to `zero_18`, which are always 0. AutoML replaces the dots in column names (`zero.1`) with underscores:
 
 ```console
 curl -X POST "https://<function-app-name>.azurewebsites.net/api/predict" \
   -H "Content-Type: application/json" \
   -H "x-functions-key: <function-key>" \
-  -d '{"data": [{"Pclass": 3, "Sex": 1, "Age": 22.0, "Fare": 7.25, "...": "..."}]}'
+  -d '{"data": [{"Passengerid": 1, "Age": 22.0, "Fare": 7.25, "Sex": 0, "sibsp": 1, "Parch": 0, "Pclass": 3, "Embarked": 2.0, "zero": 0, "zero_1": 0, "...": "...", "zero_18": 0}]}'
 ```
 
-A list of values in the model's column order also works: `{"data": [[3, 1, 22.0, 7.25, ...]]}`.
+A list of values in the model's column order also works: `{"data": [[1, 22.0, 7.25, 0, ...]]}`.
 
-Expected response, one prediction per passenger:
+Expected response, one prediction per passenger. The ONNX model labels its classes `"True"` (survived) and `"False"`, as strings, because AutoML turned the 0/1 target column into class labels:
 
 ```json
 {
-  "prediction": [0]
+  "prediction": ["False"]
 }
 ```
 
-To test locally before you publish, run `func start` in `titanic-survival-app/` and send the same request to `http://localhost:7071/api/predict`, without the key.
+A request without the key gets `401 Unauthorized`.
+
+To test locally before you publish, create `titanic-survival-app/local.settings.json` (git-ignored, and left out of the upload by `.funcignore`):
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsStorage": ""
+  }
+}
+```
+
+Then run `func start` in `titanic-survival-app/`, with the repository's `venv` activated, and send the same request to `http://localhost:7071/api/predict`, without the key. The first start takes a minute or two while Core Tools downloads its extension bundle.
 
 ## 🔧 Troubleshooting
 

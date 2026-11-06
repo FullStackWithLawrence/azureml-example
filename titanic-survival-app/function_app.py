@@ -31,7 +31,9 @@ REQUEST AND RESPONSE:
 - POST {"data": [{"Age": 22.0, "Sex": 1, ...}, ...]}: one object per passenger,
   keyed by the model's input (column) names. A list of values in the model's
   input order works too: {"data": [[22.0, 1, ...]]}.
-- Returns {"prediction": [0, ...]}: one label per passenger.
+- Returns {"prediction": ["False", ...]}: one label per passenger, as the model
+  names its classes. An AutoML classifier exported to ONNX returns its labels as
+  strings, e.g. "True" and "False" for a 0/1 target column.
 """
 
 import glob

@@ -1,4 +1,6 @@
 automl-model
+# Azure Functions Core Tools settings for func start; can hold connection strings
+local.settings.json
 
 # application data
 # -------------------------------------

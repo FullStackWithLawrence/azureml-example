@@ -12,22 +12,22 @@ well commented, and consistent from one class to the next.
 
 ## Repository map
 
-| Path                                        | What lives there                                                              |
-| ------------------------------------------- | ----------------------------------------------------------------------------- |
-| `azure_ai/ml_studio.py`                     | Every helper class. One file, one class per Azure ML concept                  |
-| `azure_ai/commands/<name>.py`               | Entry points: `python3 -m azure_ai.commands.<name> ...`                       |
-| `azure_ai/tests/`                           | `unittest` tests; `test_base.py` holds `AzureMLTestBase`                      |
-| `azure_ai/tests/data/maths.csv`             | Test data. It is really an Excel workbook named `.csv`, on purpose            |
-| `azure_ai/__version__.py`                   | Written by CI (`semanticVersionBump.yml`). Never edit it                      |
-| `titanic-survival-app/`                     | Azure Function serving a downloaded AutoML model (`automl-model/`, ignored)   |
-| `jupyter/`, `docs/contrib/`                 | Course notebooks and contributed notebooks                                    |
-| `docs/*.md`                                 | Setup, configuration, AutoML, deployment and Azure CLI guides                 |
-| `requirements/`                             | `base.txt` pins, `local.txt` = base + dev tools, `prod.txt` = base            |
-| `setup_config.py`                           | Interactive helper that installs `config.json`                                |
-| `Dockerfile`                                | `python:3.9` (linux/amd64) image with the Azure CLI and `requirements/prod`   |
-| `.pre-commit-config.yaml`                   | The lint and format standard                                                  |
-| `.github/workflows/`                        | `test.yml`, `pullRequestController.yml`, `release.yml`, `pushMain.yml`, bumps |
-| `commitlint.config.js`, `release.config.js` | Commit message rules and semantic-release (branches main, beta, alpha)        |
+| Path                                        | What lives there                                                                               |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `azure_ai/ml_studio.py`                     | Every helper class. One file, one class per Azure ML concept                                   |
+| `azure_ai/commands/<name>.py`               | Entry points: `python3 -m azure_ai.commands.<name> ...`                                        |
+| `azure_ai/tests/`                           | `unittest` tests; `test_base.py` holds `AzureMLTestBase`                                       |
+| `azure_ai/tests/data/maths.csv`             | Test data. It is really an Excel workbook named `.csv`, on purpose                             |
+| `azure_ai/__version__.py`                   | Written by CI (`semanticVersionBump.yml`). Never edit it                                       |
+| `titanic-survival-app/`                     | Azure Function (Python 3.14) serving the AutoML model's ONNX export (`automl-model/`, ignored) |
+| `jupyter/`, `docs/contrib/`                 | Course notebooks and contributed notebooks                                                     |
+| `docs/*.md`                                 | Setup, configuration, AutoML, deployment and Azure CLI guides                                  |
+| `requirements/`                             | `in/*.in` sources, compiled by pip-compile into `base/test/local/prod.txt`                     |
+| `setup_config.py`                           | Interactive helper that installs `config.json`                                                 |
+| `Dockerfile`                                | `python:3.14` image with the Azure CLI and `requirements/prod`                                 |
+| `.pre-commit-config.yaml`                   | The lint and format standard                                                                   |
+| `.github/workflows/`                        | `test.yml`, `pullRequestController.yml`, `release.yml`, `pushMain.yml`, bumps                  |
+| `commitlint.config.js`, `release.config.js` | Commit message rules and semantic-release (branches main, beta, alpha)                         |
 
 ## Non-negotiable rules
 
@@ -40,7 +40,8 @@ well commented, and consistent from one class to the next.
 3. **Run the offline tests yourself** after every change:
    `GITHUB_ACTIONS=true python -m unittest discover -s azure_ai/`. Run live
    tests only when the user asks. See `azureml-python-testing`.
-4. **Stay on Python 3.9.** See `azureml-python-environment`.
+4. **Python 3.14 and the Azure ML SDK v2 (`azure-ai-ml`) only.** Never add an
+   `azureml-*` (v1) package. See `azureml-python-environment`.
 5. **The pre-commit hooks are the lint standard.** See `azureml-code-quality`.
 6. **The repository is public.** No credentials, subscription or tenant ids,
    Kaggle keys or personal data anywhere, including notebook outputs.
@@ -53,7 +54,7 @@ Before writing anything, find the closest existing example and copy its shape.
 - **A helper class** in `ml_studio.py` subclasses `AzureAIMLWorkspace`, takes
   its resource name first and options as keyword arguments, keeps a class
   attribute for the Azure object (`cluster`, `endpoint`, `dataset`), and
-  offers `get_default_name(workspace)` (a classmethod), `get_or_create()` and,
+  offers `get_default_name(ml_client)` (a classmethod), `get_or_create()` and,
   where it makes sense, `delete()`. See `azureml-ml-studio`.
 - **A command** in `azure_ai/commands/` is a module with a docstring that
   includes a `usage:` line, `argparse` arguments, and an
@@ -67,18 +68,10 @@ Before writing anything, find the closest existing example and copy its shape.
 These came from the template the repository was made from. Leave them alone
 unless the task is about them, and don't spread them to new files.
 
-- `pyproject.toml` names the project `Smarter`, version `0.10.24`, and says
-  `requires-python = ">=3.10"`; black targets `py312`. The real runtime is 3.9.
 - `docs/CONTRIBUTING.md` and `docs/12-FACTOR.md` mention Smarter, Terraform,
   LangChain, AWS and docker-compose, none of which this repository uses.
-- `mypy.ini` loads `mypy_django_plugin`, which isn't installed. mypy isn't
-  part of the standard.
-- `tox.ini` refers to `requirements.txt` and `api/terraform`, which don't exist.
 - `.github/actions/tests/pre-commit/action.yml` checks `requirements/dev.txt`,
   which doesn't exist (it's `local.txt`). No workflow calls it.
-- `commands/dataset_from_kaggle.py` declares the positional `dataset_name`
-  twice, so it fails at start-up; `commands/compute_cluster.py` ignores its
-  argument and always uses `tiny-cluster`.
 - Docstrings in `ml_studio.py` sometimes list `Args:` that a method no longer
   takes. When you change a method, correct its docstring.
 
@@ -100,7 +93,8 @@ When one of these bites the task at hand, fix it as its own change and say so.
 
 ## Definition of done
 
-- The code follows an existing pattern, and reads well to a student.
+- The code follows an existing pattern, and reads well to a student: simple
+  over compact, about one operation per line (see `azureml-code-quality`).
 - The offline tests pass, you ran them, and new behavior has a test (offline
   where possible, live-guarded where it must call Azure).
 - The pre-commit hooks pass on the changed files.

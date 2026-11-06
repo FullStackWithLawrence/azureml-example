@@ -1,83 +1,103 @@
 ---
 name: azureml-python-environment
-description: Use when azureml-example code must run locally (tests, commands, setup_config.py), when the virtual environment is missing or broken (e.g. "bad CPU type in executable", ModuleNotFoundError azureml), or when changing Python versions, requirements/*.txt pins, the Dockerfile, or make targets. Covers the Python 3.9 pin and why, the venv and venv3.12 folders, rebuilding the venv on Apple silicon without deleting anything unasked, the three requirements files, the Docker image, and the Makefile's destructive targets.
+description: Use when azureml-example code must run locally (tests, commands, setup_config.py), when the virtual environment is missing or broken (e.g. ModuleNotFoundError), or when changing Python versions, requirements (requirements/in/*.in and the compiled requirements/*.txt), the Dockerfile, or make targets. Covers the Python 3.14 target and the Azure ML SDK v2 that makes it possible, the venv folder (which also runs the notebooks), compiling requirements with pip-compile, the Docker image, and the Makefile's destructive targets.
 ---
 
 # Python Environment
 
-## Python 3.9, on purpose
+## Python 3.14, on the Azure ML SDK v2
 
-The v1 SDK (`azureml-core`, `azureml-train-automl`, `azureml-widgets`,
-`azureml-pipeline-core`, all pinned at 1.60.x) supports old Pythons only, and
-AutoML pins old pandas and scikit-learn (`pandas==1.5.3`,
-`scikit-learn==1.5.1`). The README warns students not to upgrade. So:
+The repository runs on Python 3.14: `PYTHON := python3.14` in the Makefile,
+`python:3.14` in the Dockerfile, `python-version: "3.14"` in the workflows,
+`default_language_version: python: python3.14` in `.pre-commit-config.yaml`,
+and `requires-python = ">=3.14"` (black `py314`) in `pyproject.toml`.
 
-- Don't change `PYTHON = python3.9` in the Makefile, `python:3.9` in the
-  Dockerfile, `python-version: "3.9"` in the workflows, or
-  `default_language_version: python: python3.9` in `.pre-commit-config.yaml`.
-- Write code that runs on 3.9: `Optional[...]` and `Union[...]` from `typing`
-  rather than `X | None`, no `match`, no 3.10+ standard library functions.
-  pyupgrade may suggest newer syntax only where 3.9 allows it.
-- Don't upgrade a pinned package across a major version (pandas 1 to 2 breaks
-  AutoML), and treat dependabot's major bumps of `azureml-*`, pandas,
-  scikit-learn or scipy as suspicious.
+That is possible because the code uses only the Azure ML SDK v2
+(`azure-ai-ml`, with `azure-identity` and `azure-storage-blob`). The v1 SDK
+(`azureml-core`, `azureml-train-automl`, ...) was retired by Microsoft on
+June 30, 2026, stops at Python 3.11 (`azureml-train-automl` requires `<3.12`),
+and its data layer (`azureml-dataprep-rslex`) has no 3.14 or arm64 macOS
+wheels. So:
+
+- Never add an `azureml-*` package. Microsoft's `mltable` and `azureml-fsspec`
+  are v2-era but depend on `azureml-dataprep` and cap at `<3.14`; that's why
+  `dataset_to_dataframe()` reads data assets through `azure-storage-blob`.
+- Before adding any package, check PyPI's `requires_python` and wheels for
+  3.14 (`curl -s https://pypi.org/pypi/<name>/json`).
+- Modern syntax is fine: `X | None`, `match`, 3.14 standard library.
+- `kaggle` imports `six` without declaring it, so `base.in` lists `six`. Keep
+  it until kaggle fixes its metadata.
+- There are no version constraints in `constraints.in` today; the old pandas
+  1.5 and scikit-learn 1.5 caps came from v1 AutoML and went with it.
+- The same limit applies to AutoML models: a pickled AutoML model needs
+  `azureml-automl-runtime` / `azureml-training-tabular` (`<3.12`) to load, so
+  titanic-survival-app serves the model's ONNX export with `onnxruntime`
+  (`azureml-function-deployment`).
 
 ## The folders on disk
 
-| Folder          | What it is                                                                                 |
-| --------------- | ------------------------------------------------------------------------------------------ |
-| `venv/`         | The project venv from `make init`, Python 3.9 + `requirements/local.txt`                   |
-| `venv3.12/`     | A separate Jupyter environment for the notebooks (pandas 2.x, no `azureml`). Not for tests |
-| `node_modules/` | semantic-release, Prettier, commitlint (from `npm install`)                                |
+| Folder          | What it is                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------ |
+| `venv/`         | The project venv from `make init`: arm64 Python 3.14 (Homebrew) + `requirements/local.txt`                   |
+| `venv3.12/`     | An old Python 3.12 Jupyter environment, no longer needed: `venv/` runs every notebook. Still in `.gitignore` |
+| `node_modules/` | semantic-release, Prettier, commitlint (from `npm install`)                                                  |
 
-**`venv/bin/python` says "bad CPU type in executable"** on the user's Apple
-silicon Mac: the venv was built from an Intel (x86_64) Python 3.9 in
-`/usr/local/bin`, and Rosetta isn't installed. Don't delete or rebuild it on
-your own. Tell the user, and offer one of these:
+If `venv/` is missing or broken, don't rebuild it with `make init` unasked
+(see below). `pip install -r requirements/local.txt` into the existing venv is
+fine. Report which environment you actually ran in.
+
+To test in the Docker image instead (Linux, Python 3.14, the Azure CLI, no
+credentials inside unless you mount them):
 
 ```bash
-# A: an arm64 Python 3.9 through pyenv (installed at /opt/homebrew/bin/pyenv)
-pyenv install 3.9
-$(pyenv prefix 3.9)/bin/python -m venv venv39
-source venv39/bin/activate && pip install -r requirements/local.txt
-
-# B: run in the Docker image, which is linux/amd64 Python 3.9
-make docker-build
-docker run --rm -e GITHUB_ACTIONS=true -v "$PWD":/dist -w /dist \
-  localhost/azureml-example python -m unittest discover -s azure_ai/
+docker build -t localhost/azureml-example .
+docker run --rm -e GITHUB_ACTIONS=true -w /dist localhost/azureml-example \
+  python -m unittest discover -s azure_ai/
 ```
 
-A new venv folder needs a `.gitignore` entry (only `venv`, `.venv` and
-`venv3.12` are ignored today). Whether some `azureml-*` 1.60 wheels install on
-macOS arm64 at all is not guaranteed; if pip fails, option B is the fallback.
-Report which environment you actually ran in.
+Don't mount the repository root into the container for tests: it holds
+`config.json`.
 
 ## Requirements files
 
-| File                                    | Contents                                                                                                                             | Used by              |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
-| `requirements/base.txt`                 | Runtime pins: python-dotenv, pandas, kaggle, azureml-\*, azure-ai-ml, ...                                                            | everything           |
-| `requirements/local.txt`                | `-r base.txt` + black, flake8, isort, pylint, bandit, pre-commit, mypy, tox, codespell, `azure.functions` (for linting the Function) | `make init`          |
-| `requirements/prod.txt`                 | `-r base.txt`                                                                                                                        | Dockerfile, CI tests |
-| `jupyter/requirements.txt`              | The notebooks' own pins                                                                                                              | `venv3.12`           |
-| `titanic-survival-app/requirements.txt` | The Function's runtime packages, unpinned                                                                                            | Azure Functions      |
+The `.txt` files are compiled from `requirements/in/*.in` with pip-compile
+(from `pip-tools`, in `local.in`), on Python 3.14 so that only releases that
+support it are picked.
 
-- Pin exact versions (`==`) with a short trailing comment saying what the
-  package is for, as `base.txt` does.
-- A runtime dependency goes in `base.txt`; a dev tool in `local.txt`.
+| File                                      | Contents                                                                                                             | Used by                    |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `requirements/in/constraints.in`          | Global version constraints (none today), included by every `.in` file                                                | pip-compile                |
+| `requirements/in/base.in`                 | Runtime packages: python-dotenv, kaggle, six, openpyxl, pandas, ..., azure-ai-ml, azure-identity, azure-storage-blob | pip-compile                |
+| `requirements/in/test.in`                 | `base.in` + `../../titanic-survival-app/requirements.txt` + `onnx` (builds the Function tests' tiny model)           | pip-compile                |
+| `requirements/in/local.in`                | `test.in` + pip-tools, `ipykernel`, `ipywidgets` (the notebooks), linters, mypy, tox                                 | pip-compile                |
+| `requirements/in/prod.in`                 | `base.in`                                                                                                            | pip-compile                |
+| `requirements/{base,test,local,prod}.txt` | The compiled, fully pinned output. Don't edit by hand. CI installs `test.txt`; the Dockerfile installs `prod.txt`    | everything                 |
+| `jupyter/requirements.txt`                | The notebooks' data-science pins on 3.14, hand-kept in step with `local.txt`, for running them outside `venv/`       | other 3.14 envs            |
+| `titanic-survival-app/requirements.txt`   | The Function's runtime packages (`azure-functions`, `numpy`, `onnxruntime`), pinned by hand, `#` comments only       | Azure Functions, `test.in` |
+
+- Add a package to the right `.in` file, unpinned, with a short trailing
+  comment saying what it is for, then recompile:
+  `make python-requirements`, or by hand
+  `pip-compile --strip-extras requirements/in/base.in -o requirements/base.txt`
+  (and `test`, `local`, `prod`). Add `--upgrade` only when upgrading is the task.
+- A runtime dependency goes in `base.in`; a test-only one in `test.in`; a dev
+  tool in `local.in`. When you change a pin in
+  `titanic-survival-app/requirements.txt` or the notebooks' packages,
+  recompile and update `jupyter/requirements.txt` to match `local.txt`.
 - `release.config.js` commits `requirements/**/*` on release; don't fight it.
 
 ## Makefile
 
-| Target                                        | Effect                                                                                        |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `make` (any target)                           | Creates `.env` with defaults if it's missing                                                  |
-| `make init`, `python-init`                    | **Runs `make clean` first**: deletes `venv/`, `node_modules/`, `package-lock.json`. Ask first |
-| `make test`                                   | Activates `venv`, runs the tests, **live** unless `GITHUB_ACTIONS=true`                       |
-| `make test-ci`                                | Same without activating a venv (CI)                                                           |
-| `make lint`                                   | isort, all pre-commit hooks, black, flake8, pylint on every file                              |
-| `make docker-build/run`                       | Builds and runs the image                                                                     |
-| `make docker-push`, `release`, `docker-prune` | Pushes an image, pushes an empty commit, deletes all local Docker images. Never run them      |
+| Target                                        | Effect                                                                                   |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `make` (any target)                           | Creates `.env` from `.env.example` if it's missing                                       |
+| `make init`, `python-init`                    | **Runs `make clean` first**: deletes `venv/` and `__pycache__` directories. Ask first    |
+| `make python-requirements`                    | Compiles `base`, `local`, `prod` and `test` `.in` files into `requirements/*.txt`        |
+| `make test`                                   | Activates `venv`, runs the tests, **live** unless `GITHUB_ACTIONS=true`                  |
+| `make test-ci`                                | Same without activating a venv (CI)                                                      |
+| `make lint`                                   | isort, all pre-commit hooks, black, flake8, pylint on every file                         |
+| `make docker-build/run`                       | Builds and runs the image                                                                |
+| `make docker-push`, `release`, `docker-prune` | Pushes an image, pushes an empty commit, deletes all local Docker images. Never run them |
 
 The host shell is zsh. It doesn't word-split variables, so pass file lists with
 `xargs` or an array, not `$FILES`.

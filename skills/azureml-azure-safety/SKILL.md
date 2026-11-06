@@ -1,6 +1,6 @@
 ---
 name: azureml-azure-safety
-description: Use before writing, testing or running any azureml-example code, test, command, notebook cell or CLI command that reaches Azure (azureml-core Workspace, Dataset, ComputeTarget, Experiment, AutoMLConfig; azure-ai-ml MLClient, batch endpoints and deployments; az ml, az functionapp, func azure functionapp publish) or Kaggle. Explains which credentials are live on this machine, what each operation costs, what the live tests create and delete, the offline test mode, patching at the point of use, and what needs the user's OK first.
+description: Use before writing, testing or running any azureml-example code, test, command, notebook cell or CLI command that reaches Azure (azure-ai-ml MLClient: data assets, compute, AutoML jobs, models, batch endpoints and deployments; azure-storage-blob; az ml, az functionapp, func azure functionapp publish) or Kaggle. Explains which credentials are live on this machine, what each operation costs, what the live tests create and delete, the offline test mode, patching at the point of use, and what needs the user's OK first.
 ---
 
 # Azure Safety
@@ -10,13 +10,13 @@ description: Use before writing, testing or running any azureml-example code, te
 On the user's machine, these reach a **real, paid Azure subscription**:
 
 - `config.json` in the repository root (git-ignored), read by
-  `Workspace.from_config()` in `AzureAIMLWorkspace`.
+  `MLClient.from_config()` in `AzureAIMLWorkspace`.
 - The Azure CLI login (`az login`, in `~/.azure`), which
   `DefaultAzureCredential` and every `az` command use.
 - `~/.kaggle/kaggle.json`, the user's Kaggle API key.
 
 Nothing in the code stops a call from creating a resource. Treat every call
-into `azureml.*`, `azure.ai.ml`, `az` or `func` as real unless you have faked
+into `azure.ai.ml`, `azure.storage.blob`, `az` or `func` as real unless you have faked
 it.
 
 ## What costs money
@@ -27,14 +27,16 @@ it.
 | `AzureAIMLStudioAssetsBatchEndpoint(...)` for a name that doesn't exist       | Creates an endpoint and a deployment (default `instance_count=2`), and may create a cluster                                           |
 | `invoke_batch_job()`                                                          | Starts nodes and runs a job                                                                                                           |
 | `run_automl_experiment()`                                                     | Hours of cluster time (`experiment_timeout_hours`, default 1.0) across many child runs. The most expensive call in the repository     |
-| `AzureAIMLAssetsDataset(...)` for a new name                                  | Uploads to the workspace blob store and registers a dataset version. Cheap, but it is a write and it lingers                          |
+| `AzureAIMLAssetsDataset(...)` for a new name                                  | Uploads to the workspace blob store and registers an MLTable data asset version. Cheap, but it is a write and it lingers              |
 | `func azure functionapp publish`, `az functionapp create`, `az ml ... create` | Creates or replaces live, public services                                                                                             |
 | `register_best_model()`, `delete()` methods, `az ml ... delete`               | Changes or removes the user's assets; may destroy someone's work                                                                      |
 
-Read-only calls (`Workspace.from_config()`, `get_default_name()`,
-`Dataset.get_by_name()`, `az ml compute show`, `az account show`) are fine
+Read-only calls (`MLClient.from_config()`, `get_default_name()`,
+`ml_client.data.get()`, `dataset_to_dataframe()`, `az ml compute show`,
+`az account show`) are fine
 when a task needs them, but they still need a network and a login. Never print
-or log the subscription id, tenant id or keys they return.
+or log the subscription id, tenant id or keys they return
+(`get_datastore_container()` reads the datastore's account key).
 
 ## Rules
 
@@ -48,14 +50,15 @@ or log the subscription id, tenant id or keys they return.
 3. **Fake before the first run.** When a new test must exercise code that calls
    Azure, add the patches before running it the first time.
 4. **Patch at the point of use.** `ml_studio.py` imports names at module load
-   (`from azureml.core import Dataset, Experiment, Workspace`,
-   `from azure.ai.ml import MLClient`), so patch `azure_ai.ml_studio.Workspace`,
-   `azure_ai.ml_studio.MLClient`, `azure_ai.ml_studio.DefaultAzureCredential`,
-   and so on. Patching `azureml.core.Workspace`, as `AzureMLTestBase` does
-   today, has no effect on `ml_studio`'s already-imported names.
+   (`from azure.ai.ml import MLClient`), so patch `azure_ai.ml_studio.MLClient`,
+   `azure_ai.ml_studio.DefaultAzureCredential`, `azure_ai.ml_studio.ContainerClient`
+   and so on; `self.mock_azure()` in `AzureMLTestBase` does the first two.
+   Patching `azure.ai.ml.MLClient` has no effect on `ml_studio`'s
+   already-imported name.
 5. **Live tests clean up.** Name what they create with a unique suffix (see
    `test_batch_endpoint.py`'s hash suffix), and delete it in the test or in
-   `tearDownClass`, even when the test fails.
+   `tearDownClass`, even when the test fails. A `tearDownClass` returns early
+   offline, since the base class's mocks are already stopped by then.
 6. **Never run `make release`, `make docker-push`, `func azure functionapp
 publish`, or `az ... create|update|delete`** unless the user asks for that
    command.
@@ -69,12 +72,18 @@ publish`, or `az ... create|update|delete`** unless the user asks for that
 The live suite assumes things already exist in the user's workspace, and
 creates others:
 
-| Test file                                     | Uses or creates                                                                                                 |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `test_cluster.py`                             | Gets, or creates, `tiny-cluster`                                                                                |
-| `test_dataset.py`                             | Reads `student-performance-base`; creates and deletes `whenamancodes-student-performance`, `test-maths-dataset` |
-| `test_batch_endpoint.py`                      | Needs model `best-01` and cluster `tiny-cluster`; creates and deletes `test-batch-endpoint-<hash>` endpoints    |
-| `test_azureml_workspace.py`, `test_config.py` | Read-only workspace connection                                                                                  |
+| Test file                                     | Uses or creates                                                                                                  |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `test_cluster.py`                             | Gets, or creates, `tiny-cluster`                                                                                 |
+| `test_dataset.py`                             | Reads `student-performance-base`; creates and archives `whenamancodes-student-performance`, `test-maths-dataset` |
+| `test_batch_endpoint.py`                      | Needs model `best-01` and cluster `tiny-cluster`; creates and deletes `test-batch-endpoint-<hash>` endpoints     |
+| `test_azureml_workspace.py`, `test_config.py` | Read-only workspace connection                                                                                   |
+
+`AzureAIMLAssetsDataset.delete()` archives a data asset (v2 can't delete
+one); `ml_client.data.restore()` brings it back, and archived assets still
+show in the studio under "Include archived". Data assets made by the old v1
+code are not MLTable and won't train an AutoML v2 job; re-create them under a
+new name.
 
 If a live test fails half way, check for leftovers and tell the user, with the
 command to delete them, e.g. `az ml batch-endpoint list -o table` and

@@ -18,7 +18,7 @@ table says which narrower skill to load.
 | ----------------------------- | ----------------------------------------------------------------------- |
 | `azureml-development`         | You're making any change. Start here.                                   |
 | `azureml-azure-safety`        | Code, tests, commands or notebooks may reach Azure or Kaggle.           |
-| `azureml-python-environment`  | The venv, Python 3.9, requirements pins, Docker image or make targets.  |
+| `azureml-python-environment`  | The venv, Python 3.14, requirements, Docker image or make targets.      |
 | `azureml-python-testing`      | You're writing or running the unit tests.                               |
 | `azureml-ml-studio`           | You're changing a helper class in `ml_studio.py` or a command.          |
 | `azureml-code-quality`        | You're finishing a change and need the pre-commit hooks, or docstrings. |

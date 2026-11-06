@@ -19,6 +19,8 @@ Demonstrate basic usage of Azure Machine Learning's [Automated ML](https://azure
 
 There is also an [example production deployment](./titanic-survival-app/) of a model created using AutomatedML. See important deployment details, [here](./docs/AZURE_DEPLOYMENT.md).
 
+New to Azure ML Studio, Kaggle or Docker? Read the illustrated walkthrough of this repository, [Getting Started With Azure ML Studio Using Python](https://blog.smarter.sh/2026/11/06/azure-ml-studio-automl-python-getting-started/).
+
 Note the following:
 
 1. Model training is a computationally intensive task and it is not free. You'll need a paid [Azure Subscription](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account). Expect to spend in the neighborhood of $0.10/per hour ($USD) when training models.

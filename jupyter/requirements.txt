@@ -1,12 +1,17 @@
-
-
-
-ipykernel==6.29.5
-ipywidgets==8.1.7
-matplotlib==3.10.3
-numpy==2.2.6
-pandas==2.3.1
-scikit-learn==1.7.0
-scipy==1.16.0
-seaborn==0.13.2
-shap==0.48.0
+# -----------------------------------------------------------------------------
+# The notebooks' Python packages, on Python 3.14. The project venv
+# (make init) has all of these, plus the Azure ML SDK v2 that
+# anomaly_detection_creditcard.ipynb needs; use this file to run the
+# data-science notebooks in some other Python 3.14 environment.
+#
+# Keep these pins in step with requirements/local.txt.
+# -----------------------------------------------------------------------------
+ipykernel==7.4.0                        # runs notebooks in this environment
+ipywidgets==8.1.9                       # progress bars in k-means.ipynb
+matplotlib==3.11.2                      # charts
+numpy==2.5.4                            # arrays
+pandas==3.1.1                           # data frames
+scikit-learn==1.9.1                     # machine learning algorithms
+scipy==1.18.1                           # scientific computing
+seaborn==0.13.2                         # statistical charts
+shap==0.54.1                            # model explanations

@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [2.0.1](https://github.com/FullStackWithLawrence/azureml-example/compare/v2.0.0...v2.0.1) (2026-11-06)
+
+### Bug Fixes
+
+* make the dataset commands and automl jobs work against azure ([4a8713f](https://github.com/FullStackWithLawrence/azureml-example/commit/4a8713f2d6ff983e67ac036af18dc617adcf0442))
+
 ## [2.0.0](https://github.com/FullStackWithLawrence/azureml-example/compare/v1.0.0...v2.0.0) (2026-11-06)
 
 ### ⚠ BREAKING CHANGES

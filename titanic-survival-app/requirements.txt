@@ -1,9 +1,10 @@
-"""
-# titanic-survival-app/requirements.txt
-# This file contains the Python package dependencies for the Azure Function App
-# that serves the Titanic dataset model.
-"""
-azure-functions
-pandas
-numpy
-scikit-learn
+# -----------------------------------------------------------------------------
+# The Python packages that the Azure Function App needs, on Python 3.14.
+# Azure installs them when you run 'func azure functionapp publish' (remote build).
+#
+# Keep these pins in step with requirements/test.txt, which runs this app's
+# tests with the same versions: make python-requirements.
+# -----------------------------------------------------------------------------
+azure-functions==2.3.0                  # the Azure Functions Python programming model
+numpy==2.5.4                            # arrays for the model's inputs and outputs
+onnxruntime==1.31.1                     # runs the AutoML model, exported to ONNX

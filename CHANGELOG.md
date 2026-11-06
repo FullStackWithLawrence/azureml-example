@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 
 
+## [2.0.2](https://github.com/FullStackWithLawrence/azureml-example/compare/v2.0.1...v2.0.2) (2026-11-06)
+
+### Bug Fixes
+
+* **endpoint:** default batch deployments to one instance ([6875f72](https://github.com/FullStackWithLawrence/azureml-example/commit/6875f7215d2394daca162d233962e53171c9eccf))
+
+### Refactoring
+
+* split azure_ai.ml_studio into one module per studio area ([d425ac1](https://github.com/FullStackWithLawrence/azureml-example/commit/d425ac1c22fad794aad1cb148fb9db4039ccd1c4))
+
 ## [2.0.1](https://github.com/FullStackWithLawrence/azureml-example/compare/v2.0.0...v2.0.1) (2026-11-06)
 
 ### Bug Fixes

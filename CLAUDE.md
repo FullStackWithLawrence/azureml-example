@@ -32,11 +32,12 @@ holds only what applies to nearly every task.
    every test that talks to Azure. Run the live tests only when the user asks.
    Never ask the user to re-run tests. Report failures honestly, including
    pre-existing ones. See `azureml-python-testing`.
-4. **Python 3.9, and don't upgrade it.** The `azureml-*` v1 SDK packages break
-   on later versions. Don't bump the Python version in the Makefile,
-   Dockerfile, workflows or pre-commit config, and don't upgrade pinned
-   packages across a major version, unless the user asks. See
-   `azureml-python-environment`.
+4. **Python 3.14 and the Azure ML SDK v2 (`azure-ai-ml`) only.** The v1 SDK
+   (`azureml-*`) is retired and doesn't support 3.14; don't add it back. Keep
+   the Python version in the Makefile, Dockerfile, workflows, pre-commit
+   config and pyproject in step, and regenerate `requirements/*.txt` from
+   `requirements/in/*.in` with `make python-requirements` rather than editing
+   pins by hand. See `azureml-python-environment`.
 5. **The pre-commit hooks are the lint standard** (black, isort, flake8,
    bandit, codespell, pyupgrade, Prettier, and the pre-commit-hooks checks).
    See `azureml-code-quality`.
@@ -66,7 +67,7 @@ holds only what applies to nearly every task.
 ## Common commands
 
 ```bash
-make init            # build ./venv with Python 3.9 and requirements/local.txt
+make init            # build ./venv with Python 3.14 and requirements/local.txt
 make test            # all tests, LIVE against Azure when config.json is present
 
 # Offline tests (what CI runs; skips everything that calls Azure)

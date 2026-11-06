@@ -11,7 +11,7 @@
 Demonstrate basic usage of Azure Machine Learning's [Automated ML](https://azure.microsoft.com/en-us/solutions/automated-machine-learning) service. Implements the following:
 
 - `AzureAIMLWorkspace`: Azure AI ML Studio workspace helper class. generates an authenticated instance of a workspace.
-- `AzureAIMLAssetsDataset`: Azure AI ML Studio data set. Provides helpers for managing ML Studio data sets, and for porting to/from kaggle data sets and local csv and Excel files.
+- `AzureAIMLAssetsDataset`: Azure AI ML Studio data asset. Provides helpers for managing ML Studio data assets (MLTable, the format AutoML trains on), and for porting to/from kaggle data sets and local csv and Excel files.
 - `AzureAIMLStudioComputeCluster`: Azure AI ML Studio Compute - compute cluster object with helpers for instantitation.
 - `AzureAIMLStudioAssetsBatchEndpoint`: Azure AI ML Studio Assets - batch end point. Providers helpers for managing end points.
 - `AzureAIMLStudioAuthoringAutomatedML`: Azure AI ML Studio Authoring - Automated ML. Helper class for managing life cycle of 'automated ml' jobs.
@@ -22,7 +22,7 @@ Note the following:
 
 1. Model training is a computationally intensive task and it is not free. You'll need a paid [Azure Subscription](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account). Expect to spend in the neighborhood of $0.10/per hour ($USD) when training models.
 
-2. This repo is currently based on Python3.9 even though this is several versions behind the latest stable version of Python. **DO NOT ARBITRARILY UPGRADE TO LATER VERSIONS OF PYTHON**. It will break. This repo is actively maintained. We monitor this. You have been warned.
+2. This repo runs on Python 3.14 and the [Azure Machine Learning SDK v2](https://learn.microsoft.com/en-us/python/api/overview/azure/ai-ml-readme) (`azure-ai-ml`). Microsoft retired the v1 SDK (`azureml-core`, `azureml-train-automl` and friends) on June 30, 2026, and v1 AutoML never supported Python later than 3.11. Code written for the v1 SDK won't run here.
 
 3. This project leverages [Github Actions](https://github.com/features/actions) for automated unit tests, build, deploy, in addition to automating various administrative tasks including for example, automating updates to 3rd party package requirements. Most of these are visible from the [Actions](https://github.com/FullStackWithLawrence/azureml-example/actions) tab above.
 
@@ -40,7 +40,7 @@ python3 -m azure_ai.commands.dataset_from_kaggle titanic heptapod/titanic
 
 Works with Linux, Windows and macOS environments.
 
-1. Verify project requirements: [Python 3.9](https://www.python.org/), [NPM](https://www.npmjs.com/) [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/). Docker will need around 1 vCPU, 2Gib memory, and 30Gib of storage space.
+1. Verify project requirements: [Python 3.14](https://www.python.org/), [NPM](https://www.npmjs.com/) [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/). Docker will need around 1 vCPU, 2Gib memory, and 30Gib of storage space.
 
 2. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
 
@@ -69,7 +69,7 @@ make                # scaffold a .env file in the root of the repo
                     #
 make init           # Initialize Python virtual environment used for code auto-completion and linting
 make test           # Verify that your Python virtual environment was built correctly and that
-                    # azureml.core finds your config.json file.
+                    # the Azure ML SDK finds your config.json file.
                     #
 make docker-build   # Build and configure all docker containers
 make docker-run     # Run docker container

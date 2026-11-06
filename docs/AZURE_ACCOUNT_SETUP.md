@@ -282,16 +282,15 @@ az ml compute show \
 ### Test Workspace Connection
 
 ```python
-from azureml.core import Workspace, Dataset
-from azureml.train.automl import AutoMLConfig
-from azureml.core.experiment import Experiment
+from azure.ai.ml import MLClient
+from azure.identity import DefaultAzureCredential
 
-# Test workspace connection
-ws = Workspace.from_config()
-print(f"✅ Connected to workspace: {ws.name}")
+# Test workspace connection (reads config.json, authenticates with your `az login`)
+ml_client = MLClient.from_config(credential=DefaultAzureCredential())
+print(f"✅ Connected to workspace: {ml_client.workspace_name}")
 
 # Test compute target
-compute_target = ws.compute_targets["tiny-cluster"]
+compute_target = ml_client.compute.get("tiny-cluster")
 print(f"✅ Compute cluster ready: {compute_target.provisioning_state}")
 ```
 

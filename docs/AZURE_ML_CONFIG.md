@@ -14,7 +14,7 @@ This guide explains how to securely configure your Azure ML workspace connection
 
 **Pros:**
 
-- Automatically detected by `Workspace.from_config()`
+- Automatically detected by `MLClient.from_config()`
 - Project-specific configuration
 - Already in `.gitignore` (secure)
 
@@ -58,13 +58,15 @@ chmod 600 config.json  # Read/write for owner only
 For production/CI environments, use environment variables instead:
 
 ```python
-from azure_ai.core import Workspace
+from azure.ai.ml import MLClient
+from azure.identity import DefaultAzureCredential
 
 # Using environment variables
-ws = Workspace(
+ml_client = MLClient(
+    credential=DefaultAzureCredential(),
     subscription_id=os.environ['AZUREML_SUBSCRIPTION_ID'],
-    resource_group=os.environ['AZUREML_RESOURCE_GROUP'],
-    workspace_name=os.environ['AZUREML_WORKSPACE_NAME']
+    resource_group_name=os.environ['AZUREML_RESOURCE_GROUP'],
+    workspace_name=os.environ['AZUREML_WORKSPACE_NAME'],
 )
 ```
 
@@ -73,21 +75,26 @@ ws = Workspace(
 For automated deployments, use service principal authentication:
 
 ```python
-from azure_ai.core.authentication import ServicePrincipalAuthentication
+from azure.ai.ml import MLClient
+from azure.identity import ClientSecretCredential
 
-svc_pr = ServicePrincipalAuthentication(
+svc_pr = ClientSecretCredential(
     tenant_id=os.environ['AZURE_TENANT_ID'],
-    service_principal_id=os.environ['AZURE_CLIENT_ID'],
-    service_principal_password=os.environ['AZURE_CLIENT_SECRET']
+    client_id=os.environ['AZURE_CLIENT_ID'],
+    client_secret=os.environ['AZURE_CLIENT_SECRET'],
 )
 
-ws = Workspace(
+ml_client = MLClient(
+    credential=svc_pr,
     subscription_id=os.environ['AZUREML_SUBSCRIPTION_ID'],
-    resource_group=os.environ['AZUREML_RESOURCE_GROUP'],
+    resource_group_name=os.environ['AZUREML_RESOURCE_GROUP'],
     workspace_name=os.environ['AZUREML_WORKSPACE_NAME'],
-    auth=svc_pr
 )
 ```
+
+`DefaultAzureCredential` also picks up `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` and
+`AZURE_CLIENT_SECRET` from the environment by itself, so the helper classes in
+`azure_ai/ml_studio.py` work with a service principal without code changes.
 
 ## 📥 How to Download config.json
 
@@ -115,14 +122,14 @@ The downloaded file should look like this:
 python setup_config.py
 
 # Run the test
-python azure_ai/tests/test_azureml.py
+python -m unittest azure_ai.tests.test_config
 ```
 
 ### Manual Testing
 
 ```bash
 # From project root
-python azure_ai/tests/test_azureml.py
+python -m unittest azure_ai.tests.test_config
 ```
 
 ### Test Components
@@ -234,18 +241,18 @@ Next steps:
 
 ```python
 # Use environment variables
-ws = Workspace.from_config(path="./config-staging.json")
+ml_client = MLClient.from_config(credential=DefaultAzureCredential(), path="./config-staging.json")
 ```
 
 ### Production
 
 ```python
-# Use service principal authentication
-ws = Workspace(
+# Use service principal authentication (see above)
+ml_client = MLClient(
+    credential=svc_pr,
     subscription_id=os.environ['AZUREML_SUBSCRIPTION_ID'],
-    resource_group=os.environ['AZUREML_RESOURCE_GROUP'],
+    resource_group_name=os.environ['AZUREML_RESOURCE_GROUP'],
     workspace_name=os.environ['AZUREML_WORKSPACE_NAME'],
-    auth=svc_pr
 )
 ```
 

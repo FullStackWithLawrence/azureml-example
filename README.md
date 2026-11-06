@@ -34,7 +34,7 @@ python3 -m azure_ai.commands.help
 python3 -m azure_ai.commands.workspace
 python3 -m azure_ai.commands.compute_cluster cluster-name
 python3 -m azure_ai.commands.dataset_from_file maths ~/Desktop/gh/fswl/azureml-example/azure_ai/tests/data/maths.csv
-python3 -m azure_ai.commands.dataset_from_kaggle titanic heptapod/titanic
+python3 -m azure_ai.commands.dataset_from_kaggle heptapod-titanic heptapod/titanic
 ```
 
 ## Setup

@@ -9,6 +9,7 @@ import importlib.util
 import json
 import os
 import tempfile
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import azure.functions as func
@@ -142,6 +143,13 @@ class AzureMLTestTitanicSurvivalApp(AzureMLTestBase):
                 response = post(self.function_app, body)
                 self.assertEqual(response.status_code, 400)
                 self.assertIn("error", json.loads(response.get_body()))
+
+    def test_unsupported_input_type(self):
+        """Test that a model input of a type the function can't build, e.g. float16, raises ValueError naming it."""
+        session = SimpleNamespace(get_inputs=lambda: [SimpleNamespace(name="Age", type="tensor(float16)")])
+
+        with self.assertRaisesRegex(ValueError, "tensor\\(float16\\)"):
+            self.function_app.to_model_inputs(session, [{"Age": 40.0}])
 
     def test_model_missing(self):
         """Test that a missing model gets a 500 with a generic message that doesn't reveal file paths."""

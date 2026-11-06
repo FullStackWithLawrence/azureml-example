@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from azure.ai.ml.entities import AmlCompute, ComputeInstance
-from azure.core.exceptions import ResourceNotFoundError
+from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 
 from azure_ai.ml_studio import AzureAIMLStudioComputeCluster
 
@@ -56,6 +56,24 @@ class AzureMLTestCluster(AzureMLTestBase):
         with self.assertRaises(TypeError):
             AzureAIMLStudioComputeCluster(cluster_name="tiny-cluster")
         ml_client.compute.begin_create_or_update.assert_not_called()
+
+    def test_lookup_error_is_raised_offline(self):
+        """Test that a cluster lookup error other than "not found" is raised, and nothing is created."""
+        ml_client = self.mock_azure()
+        ml_client.compute.get.side_effect = HttpResponseError("server error")
+
+        with self.assertRaises(HttpResponseError):
+            AzureAIMLStudioComputeCluster(cluster_name="tiny-cluster")
+        ml_client.compute.begin_create_or_update.assert_not_called()
+
+    def test_create_cluster_failure_offline(self):
+        """Test that a failed cluster creation, e.g. no quota for the VM size, is raised."""
+        ml_client = self.mock_azure()
+        ml_client.compute.get.side_effect = ResourceNotFoundError("not found")
+        ml_client.compute.begin_create_or_update.side_effect = HttpResponseError("quota exceeded")
+
+        with self.assertRaises(HttpResponseError):
+            AzureAIMLStudioComputeCluster(cluster_name="tiny-cluster")
 
     def test_get_default_name_offline(self):
         """Test that get_default_name() skips compute that isn't a cluster, and raises when there is no cluster."""

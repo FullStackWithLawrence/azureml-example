@@ -1,5 +1,6 @@
 """
-Lawrence McDaniel
+Lawrence McDaniel.
+
 https://lawrencemcdaniel.com
 
 Create a dataset from a local file.
@@ -11,9 +12,6 @@ import argparse
 import os
 
 from azure_ai.ml_studio import AzureAIMLAssetsDataset
-
-
-HERE = os.path.abspath(os.path.dirname(__file__))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create a dataset from a local file.")
@@ -29,7 +27,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    file_path = os.path.join(HERE, args.file_path)
+    # A relative path is relative to where you run the command, and ~ is your home folder
+    file_path = os.path.abspath(os.path.expanduser(args.file_path))
     dataset_name = args.dataset_name
     data_set = AzureAIMLAssetsDataset(dataset_name=dataset_name, file_name=file_path)
     pandas_df = data_set.dataset_to_dataframe()

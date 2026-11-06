@@ -5,7 +5,7 @@ https://lawrencemcdaniel.com
 
 Create a dataset from Kaggle.
 usage:
-    python3 -m azure_ai.commands.dataset_from_kaggle titanic heptapod/titanic
+    python3 -m azure_ai.commands.dataset_from_kaggle heptapod-titanic heptapod/titanic
 """
 
 import argparse

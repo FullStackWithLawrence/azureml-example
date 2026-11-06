@@ -24,17 +24,27 @@ func --version
 
 ### Step 1: Train and Register an ONNX Model
 
-`AzureAIMLStudioAuthoringAutomatedML.run_automl_experiment()` asks AutoML for ONNX-compatible models by default (`enable_onnx_compatible_models=True`). AutoML then tries only the algorithms it can export to ONNX, and saves each trial's model as `outputs/model.onnx` as well as in MLflow format. Register the best trial's ONNX model:
+`AzureAIMLStudioAuthoringAutomatedML.run_automl_experiment()` asks AutoML for ONNX-compatible models by default (`enable_onnx_compatible_models=True`). AutoML then tries only the algorithms it can export to ONNX, and saves each trial's model as `outputs/model.onnx` as well as in MLflow format.
+
+First register the training data, the [heptapod/titanic](https://www.kaggle.com/datasets/heptapod/titanic) dataset from Kaggle. Its target column is spelled `2urvived`, a typo in the dataset itself:
+
+```console
+python3 -m azure_ai.commands.dataset_from_kaggle heptapod-titanic heptapod/titanic
+```
+
+Then train, and register the best trial's ONNX model. `register_best_model()` waits for the job to finish:
 
 ```python
 from azure_ai.ml_studio import AzureAIMLStudioAuthoringAutomatedML
 
-automl = AzureAIMLStudioAuthoringAutomatedML(dataset_name="titanic", cluster_name="tiny-cluster")
-job = automl.run_automl_experiment(experiment_name="titanic-survival", target_column="Survived")
+automl = AzureAIMLStudioAuthoringAutomatedML(dataset_name="heptapod-titanic", cluster_name="tiny-cluster")
+job = automl.run_automl_experiment(experiment_name="titanic-survival", target_column="2urvived")
 automl.register_best_model(job, model_name="titanic-survival-onnx", model_format="onnx")
 ```
 
-AutoML jobs bill compute time for up to `experiment_timeout_hours` (one hour by default).
+AutoML jobs bill compute time for up to `experiment_timeout_hours` (one hour by default). AutoML runs one trial per node, so on a one-node cluster such as `tiny-cluster` the trials run one at a time.
+
+A data asset made in the studio's UI, or with the retired v1 SDK, isn't an MLTable, and an AutoML job can't train on it. Register a new one under a new name, as above.
 
 ### Step 2: Download Your ONNX Model
 

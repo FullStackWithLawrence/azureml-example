@@ -40,7 +40,7 @@ from azure.ai.ml.entities import (
     SasTokenConfiguration,
     Workspace,
 )
-from azure.ai.ml.exceptions import ValidationException
+from azure.ai.ml.exceptions import ValidationErrorType, ValidationException
 from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import ContainerClient
@@ -77,6 +77,30 @@ MODEL_FORMATS = {
     "mlflow": ("outputs/mlflow-model/", AssetTypes.MLFLOW_MODEL),
     "onnx": ("outputs/model.onnx", AssetTypes.CUSTOM_MODEL),
 }
+
+
+def is_not_found(error: BaseException | None) -> bool:
+    """
+    Tell whether an Azure ML lookup failed because the asset doesn't exist.
+
+    The SDK reports a missing asset in more than one way. A lookup by version
+    raises ResourceNotFoundError. A lookup by label="latest" raises a
+    ValidationException, which some operations (data.get) wrap in an
+    MlException. So this checks the error and every error it was raised from.
+
+    Args:
+        error: The exception that a get() call raised
+
+    Returns:
+        bool: True if the asset doesn't exist
+    """
+    while error is not None:
+        if isinstance(error, ResourceNotFoundError):
+            return True
+        if isinstance(error, ValidationException) and error.error_type == ValidationErrorType.RESOURCE_NOT_FOUND:
+            return True
+        error = error.__context__
+    return False
 
 
 class AzureAIMLWorkspace:
@@ -203,11 +227,12 @@ class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
             dataset = self.ml_client.data.get(name=self.dataset_name, label="latest")
             logger.info("Found existing dataset: %s", self.dataset_name)
             return dataset
-        except ResourceNotFoundError:
-            logger.info("Dataset not found, creating new dataset: %s", self.dataset_name)
+        # pylint: disable=W0718
         except Exception as e:
-            logger.error("Failed to get or create dataset %s: %s", self.dataset_name, e)
-            raise e
+            if not is_not_found(e):
+                logger.error("Failed to get or create dataset %s: %s", self.dataset_name, e)
+                raise e
+            logger.info("Dataset not found, creating new dataset: %s", self.dataset_name)
 
         # ----------------------------------------------------------------------
         # eval the source data
@@ -274,11 +299,14 @@ class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
         dataset_path = str(dataset.path or "")
 
         # e.g. azureml://subscriptions/.../datastores/workspaceblobstore/paths/LocalUpload/<hash>/<folder>/
+        # A data asset made in the studio points at the file itself, with a
+        # trailing slash: .../paths/UI/<date>/train.csv/. Dropping the slash
+        # finds the files in a folder and a file on its own alike.
         match = re.search(r"datastores/(?P<datastore>[^/]+)/paths/(?P<path>.*)$", dataset_path)
         if not match:
             raise ValueError(f"Dataset {self.dataset_name} is not stored in a datastore: {dataset_path}")
         datastore_name = match.group("datastore")
-        folder = match.group("path")
+        folder = match.group("path").rstrip("/")
 
         container = self.get_datastore_container(datastore_name)
         for blob in container.list_blobs(name_starts_with=folder):
@@ -386,11 +414,10 @@ class AzureAIMLAssetsDataset(AzureAIMLWorkspace):
                 if not csv_files:
                     raise ValueError(f"No CSV files found in dataset: {self.kaggle_dataset}")
 
-                for csv_file in csv_files:
-                    logger.info("Found CSV file: %s", csv_file)
-                    return self.from_file(csv_file)
-
-                raise ValueError(f"No CSV files found in dataset {self.kaggle_dataset} download: {csv_files}")
+                # Use the first CSV file, while the download folder still exists
+                csv_file = csv_files[0]
+                logger.info("Found CSV file: %s", csv_file)
+                return self.from_file(csv_file)
 
         except Exception as e:
             logger.error("Failed to load Kaggle dataset %s: %s", self.dataset_name, e)
@@ -611,13 +638,14 @@ class AzureAIMLStudioAssetsBatchEndpoint(AzureAIMLWorkspace):
             logger.info("Found existing batch endpoint: %s", self.endpoint_name)
             return endpoint
         # pylint: disable=W0718
-        except Exception:
-            logger.warning("Batch endpoint not found, creating new batch endpoint: %s", self.endpoint_name)
+        except Exception as e:
+            if not is_not_found(e):
+                logger.error("Failed to get batch endpoint %s: %s", self.endpoint_name, e)
+                raise e
+            logger.info("Batch endpoint not found, creating new batch endpoint: %s", self.endpoint_name)
 
         if not self.description:
             self.description = f"Batch endpoint for {self.model_name} model"
-        if not self.endpoint_name:
-            raise ValueError("Endpoint name must be provided")
 
         try:
             logger.info("Creating batch endpoint: %s", self.endpoint_name)
@@ -786,7 +814,7 @@ class AzureAIMLStudioAuthoringAutomatedML(AzureAIMLWorkspace):
             target_column: Name of the target column for prediction
             task: ML task type ('classification', 'regression', 'forecasting')
             primary_metric: Primary metric to optimize
-            max_concurrent_iterations: Maximum concurrent AutoML trials
+            max_concurrent_iterations: Maximum concurrent AutoML trials, capped at the cluster's node count
             max_cores_per_iteration: Cores per trial (-1 for all available)
             test_size: Proportion of data held out for testing the best model
             cv_folds: Number of cross-validation folds
@@ -812,6 +840,11 @@ class AzureAIMLStudioAuthoringAutomatedML(AzureAIMLWorkspace):
         training_data = Input(type=AssetTypes.MLTABLE, path=training_data_path)
         timeout_minutes = int(experiment_timeout_hours * 60)
 
+        # Each trial runs on its own node, and AutoML rejects a job that asks
+        # for more concurrent trials than the cluster has nodes.
+        max_nodes = self.cluster.max_instances or 1
+        max_concurrent_trials = min(max_concurrent_iterations, max_nodes)
+
         try:
             # Configure the AutoML job. Featurization is automatic by default.
             automl_job = create_automl_job(
@@ -826,7 +859,7 @@ class AzureAIMLStudioAuthoringAutomatedML(AzureAIMLWorkspace):
             automl_job.set_limits(
                 timeout_minutes=timeout_minutes,
                 trial_timeout_minutes=iteration_timeout_minutes,
-                max_concurrent_trials=max_concurrent_iterations,
+                max_concurrent_trials=max_concurrent_trials,
                 max_cores_per_trial=max_cores_per_iteration,
                 enable_early_termination=enable_early_stopping,
             )

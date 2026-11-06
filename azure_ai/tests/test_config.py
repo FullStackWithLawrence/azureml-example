@@ -15,6 +15,12 @@ logger = getLogger(__name__)
 class AzureMLTestConfig(AzureMLTestBase):
     """Tests of the Python environment and the workspace configuration."""
 
+    def test_package_version(self):
+        """Test that azure_ai has a semantic version, which CI writes to azure_ai/__version__.py."""
+        from azure_ai.__version__ import __version__  # pylint: disable=C0415
+
+        self.assertRegex(__version__, r"^\d+\.\d+\.\d+")
+
     def test_python_version(self):
         """Test that the tests run on Python 3.14 or later, the version this repository targets."""
         self.assertGreaterEqual(sys.version_info[:2], (3, 14))

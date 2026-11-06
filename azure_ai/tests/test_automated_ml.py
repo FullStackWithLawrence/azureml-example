@@ -12,6 +12,7 @@ from typing import cast
 from azure.ai.ml.automl import ClassificationJob, ForecastingJob
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import AmlCompute, Job
+from azure.core.exceptions import HttpResponseError
 
 from azure_ai.ml_studio import AzureAIMLStudioAuthoringAutomatedML
 
@@ -61,6 +62,42 @@ class AzureMLTestAutomatedML(AzureMLTestBase):
         self.assertEqual(automl_job.limits.max_concurrent_trials, 2)
         self.assertTrue(automl_job.limits.enable_early_termination)
         self.assertTrue(automl_job.training.enable_onnx_compatible_models)
+
+    def test_concurrent_trials_capped_at_cluster_nodes(self):
+        """Test that run_automl_experiment() asks for no more concurrent trials than the cluster has nodes."""
+        self.automl.cluster = AmlCompute(name="tiny-cluster", max_instances=1)
+
+        self.automl.run_automl_experiment(
+            experiment_name="maths-experiment", target_column="G3", max_concurrent_iterations=4
+        )
+
+        automl_job = self.ml_client.jobs.create_or_update.call_args.args[0]
+        self.assertEqual(automl_job.limits.max_concurrent_trials, 1)
+
+    def test_run_automl_experiment_failure(self):
+        """Test that a job the workspace rejects is raised."""
+        self.ml_client.jobs.create_or_update.side_effect = HttpResponseError("The AutoMLJob input is invalid")
+
+        with self.assertRaises(HttpResponseError):
+            self.automl.run_automl_experiment(experiment_name="maths-experiment", target_column="G3")
+
+    def test_get_best_model_unsubmitted_job(self):
+        """Test that get_best_model() raises ValueError for a job that was never submitted, without waiting."""
+        with self.assertRaises(ValueError):
+            self.automl.get_best_model(fake_job(name=None))
+        self.ml_client.jobs.stream.assert_not_called()
+
+    def test_register_best_model_failure(self):
+        """Test that a model registration that fails, e.g. the trial saved no model, is raised."""
+        finished_parent = fake_job(
+            name="parent-job", status="Completed", tags={}, properties={"automl_best_child_run_id": "parent-job_7"}
+        )
+        best_child = fake_job(name="parent-job_7", properties={})
+        self.ml_client.jobs.get.side_effect = [finished_parent, best_child]
+        self.ml_client.models.create_or_update.side_effect = HttpResponseError("no such artifact")
+
+        with self.assertRaises(HttpResponseError):
+            self.automl.register_best_model(finished_parent, model_name="best-01")
 
     def test_run_forecasting_experiment(self):
         """Test that a forecasting job gets the time column."""

@@ -35,7 +35,7 @@ class AzureAIMLStudioAssetsBatchEndpoint(AzureAIMLWorkspace):
         *args,
         compute_target_name: str | None = None,
         deployment_name: str | None = None,
-        instance_count: int = 2,
+        instance_count: int = 1,
         max_concurrency_per_instance: int = 1,
         mini_batch_size: int = 10,
         retry_settings_max_retries: int = 3,

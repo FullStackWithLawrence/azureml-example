@@ -279,8 +279,10 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
         batch_endpoint = AzureAIMLStudioAssetsBatchEndpoint(
             endpoint_name=self.endpoint_name,
             model_name=self.model_name,
+            compute_target_name=self.compute_target_name,
             deployment_name="custom-deployment",
-            instance_count=3,
+            # tiny-cluster has one node, and a deployment can't ask for more instances than that
+            instance_count=1,
             max_concurrency_per_instance=2,
             mini_batch_size=5,
             retry_settings_max_retries=5,
@@ -289,7 +291,7 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
         )
 
         self.assertIsInstance(batch_endpoint, AzureAIMLStudioAssetsBatchEndpoint)
-        self.assertEqual(batch_endpoint.instance_count, 3)
+        self.assertEqual(batch_endpoint.instance_count, 1)
         self.assertEqual(batch_endpoint.max_concurrency_per_instance, 2)
         self.assertEqual(batch_endpoint.mini_batch_size, 5)
 
@@ -304,6 +306,7 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
         batch_endpoint = AzureAIMLStudioAssetsBatchEndpoint(
             endpoint_name=self.endpoint_name,
             model_name=self.model_name,
+            compute_target_name=self.compute_target_name,
             description=self.description + " - test_batch_job_invocation()",
         )
 

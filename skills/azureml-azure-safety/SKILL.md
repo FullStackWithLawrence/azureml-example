@@ -24,7 +24,7 @@ it.
 | Operation                                                                     | Cost and risk                                                                                                                         |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `AzureAIMLStudioComputeCluster(...)` for a name that doesn't exist            | Creates an AmlCompute cluster (default `STANDARD_DS3_V2`, up to 4 nodes). Scales to 0 after 300 s idle, but nodes bill while they run |
-| `AzureAIMLStudioAssetsBatchEndpoint(...)` for a name that doesn't exist       | Creates an endpoint and a deployment (default `instance_count=2`), and may create a cluster                                           |
+| `AzureAIMLStudioAssetsBatchEndpoint(...)` for a name that doesn't exist       | Creates an endpoint and a deployment (default `instance_count=1`), and may create a cluster                                           |
 | `invoke_batch_job()`                                                          | Starts nodes and runs a job                                                                                                           |
 | `run_automl_experiment()`                                                     | Hours of cluster time (`experiment_timeout_hours`, default 1.0) across many child runs. The most expensive call in the repository     |
 | `AzureAIMLAssetsDataset(...)` for a new name                                  | Uploads to the workspace blob store and registers an MLTable data asset version. Cheap, but it is a write and it lingers              |

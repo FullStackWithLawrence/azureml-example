@@ -14,7 +14,7 @@ well commented, and consistent from one class to the next.
 
 | Path                                        | What lives there                                                                               |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `azure_ai/ml_studio.py`                     | Every helper class. One file, one class per Azure ML concept                                   |
+| `azure_ai/ml_studio/`                       | The helper classes: one module per Azure ML Studio area, all re-exported by `__init__.py`      |
 | `azure_ai/commands/<name>.py`               | Entry points: `python3 -m azure_ai.commands.<name> ...`                                        |
 | `azure_ai/tests/`                           | `unittest` tests; `test_base.py` holds `AzureMLTestBase`                                       |
 | `azure_ai/tests/data/maths.csv`             | Test data. It is really an Excel workbook named `.csv`, on purpose                             |
@@ -52,7 +52,7 @@ well commented, and consistent from one class to the next.
 
 Before writing anything, find the closest existing example and copy its shape.
 
-- **A helper class** in `ml_studio.py` subclasses `AzureAIMLWorkspace`, takes
+- **A helper class** in `azure_ai/ml_studio/` subclasses `AzureAIMLWorkspace`, takes
   its resource name first and options as keyword arguments, keeps a class
   attribute for the Azure object (`cluster`, `endpoint`, `dataset`), and
   offers `get_default_name(ml_client)` (a classmethod), `get_or_create()` and,
@@ -73,7 +73,7 @@ unless the task is about them, and don't spread them to new files.
   LangChain, AWS and docker-compose, none of which this repository uses.
 - `.github/actions/merge-branch/action.yml` is a composite action that no
   workflow calls.
-- Docstrings in `ml_studio.py` sometimes list `Args:` that a method no longer
+- Docstrings in `azure_ai/ml_studio/` sometimes list `Args:` that a method no longer
   takes. When you change a method, correct its docstring.
 
 When one of these bites the task at hand, fix it as its own change and say so.
@@ -85,7 +85,7 @@ When one of these bites the task at hand, fix it as its own change and say so.
 | Anything that may reach Azure or Kaggle: code, tests, CLI, notebooks | `azureml-azure-safety`        |
 | The virtual environment, Python version, requirements, Docker image  | `azureml-python-environment`  |
 | Writing or running tests                                             | `azureml-python-testing`      |
-| The helper classes in `ml_studio.py` and the command modules         | `azureml-ml-studio`           |
+| The helper classes in `azure_ai/ml_studio/` and the commands         | `azureml-ml-studio`           |
 | Lint, format, docstrings, pre-commit                                 | `azureml-code-quality`        |
 | Writing a commit message                                             | `azureml-git-commits`         |
 | Creating or describing a pull request                                | `azureml-pull-requests`       |

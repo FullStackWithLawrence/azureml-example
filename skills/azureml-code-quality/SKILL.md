@@ -88,7 +88,7 @@ getLogger(__name__)`, %-style lazy log arguments, re-raising after logging.
   `usage:` line.
 - Modern type hints (`str | None`, `dict`, `list`), not `typing.Optional`.
   pyright (what Pylance shows in the editor) and
-  `mypy azure_ai/ml_studio.py azure_ai/commands` should report no errors; they
+  `mypy azure_ai/ml_studio azure_ai/commands` should report no errors; they
   aren't hooks, but the user sees Pylance's errors. Narrow `X | None` with a check that raises, rather
   than `# type: ignore`.
 - pydocstringformatter makes a docstring's first line a sentence ending in a

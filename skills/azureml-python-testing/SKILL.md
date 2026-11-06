@@ -45,10 +45,10 @@ create (the table in `azureml-azure-safety`).
 Note that a skipped test returns early and so **counts as passed**: "OK" in
 offline mode proves the imports and offline tests only. Say so when reporting.
 
-In offline mode `AzureMLTestBase.setUpClass()` also patches
-`azure_ai.ml_studio.MLClient` and `azure_ai.ml_studio.DefaultAzureCredential`
-(where `ml_studio` uses them), so a test that forgets its guard still can't
-reach Azure. The patches stop in `tearDownClass()`, which runs **before** a
+In offline mode `AzureMLTestBase.setUpClass()` also patches `MLClient` and
+`DefaultAzureCredential` in `azure_ai.ml_studio.workspace`, and
+`DefaultAzureCredential` in `azure_ai.ml_studio.assets_dataset` (where they
+are used), so a test that forgets its guard still can't reach Azure. The patches stop in `tearDownClass()`, which runs **before** a
 subclass's own cleanup code: a `tearDownClass` that would touch Azure must
 return early when `not cls.is_testable`, as `test_batch_endpoint.py` does.
 For extra safety in a local offline run, move `config.json` aside first.
@@ -58,14 +58,14 @@ For extra safety in a local offline run, move `config.json` aside first.
 - One test module per source area: `test_<area>.py`, class
   `AzureMLTest<Area>(AzureMLTestBase)`, a docstring on every test that says
   what it proves (several existing ones are copy-pasted; don't copy those).
-- **Prefer offline tests.** Most logic in `ml_studio.py` (choosing a data
+- **Prefer offline tests.** Most logic in `azure_ai/ml_studio/` (choosing a data
   source, `from_file()`'s CSV-then-Excel fallback, default names, building a
   `ModelBatchDeployment`, argument handling in commands) can be tested with
   mocks and no network. Such a test has no `is_testable` guard.
 - **Fake the workspace with `self.mock_azure()`**, which patches `MLClient`,
-  `DefaultAzureCredential` and `load_dotenv` in `azure_ai.ml_studio` for one
-  test, in any mode, and returns the mock `ml_client` that every helper class
-  gets. Name such tests `test_<what>_offline`:
+  `DefaultAzureCredential` and `load_dotenv` in `azure_ai.ml_studio.workspace`
+  (and `DefaultAzureCredential` in `assets_dataset`) for one test, in any
+  mode, and returns the mock `ml_client` that every helper class gets. Name such tests `test_<what>_offline`:
 
   ```python
   def test_existing_cluster_offline(self):
@@ -78,12 +78,17 @@ For extra safety in a local offline run, move `config.json` aside first.
   ```
 
 - Return real SDK entities (`AmlCompute`, `ComputeInstance`,
-  `AzureBlobDatastore`, `AccountKeyConfiguration`) where `ml_studio` checks
+  `AzureBlobDatastore`, `AccountKeyConfiguration`) where the helpers check
   types with `isinstance`; a `MagicMock` fails those checks. For a `Job`,
   `test_automated_ml.py`'s `fake_job(**fields)` casts a `SimpleNamespace`.
-- Any other patch goes at the point of use too: `azure_ai.ml_studio.<Name>`
-  (e.g. `ContainerClient`, `kaggle`), never the name's source module, which
-  `ml_studio` has already imported from.
+- Any other patch goes at the point of use too: the module that uses the
+  name, e.g. `azure_ai.ml_studio.assets_dataset.ContainerClient` or
+  `azure_ai.ml_studio.assets_dataset.kaggle`. Never patch the name's source
+  module or the package's re-export: the module has already imported it.
+  A command imports its class from the package at run time, so
+  `test_commands.py` patches the class there (`azure_ai.ml_studio.<Class>`).
+- Pure helpers in `azure_ai/ml_studio/utils.py` need no mocks at all; see
+  `test_utils.py`.
 - **Live tests** keep the `is_testable` guard, use unique names (a hash or
   timestamp suffix, as `test_batch_endpoint.py` does), and delete what they
   create in the test and again in `tearDownClass` inside `try/except`.

@@ -1,22 +1,37 @@
 ---
 name: azureml-ml-studio
-description: Use when adding or changing a helper class in azure_ai/ml_studio.py (AzureAIMLWorkspace, AzureAIMLAssetsDataset, AzureAIMLStudioComputeCluster, AzureAIMLStudioAssetsBatchEndpoint, AzureAIMLStudioAuthoringAutomatedML) or a command module in azure_ai/commands/. Covers the class hierarchy and naming, the get_default_name / get_or_create / delete pattern, the Azure ML SDK v2 (azure-ai-ml) objects each class wraps, logging and error handling, and the checklist for a new class or command.
+description: Use when adding or changing a helper class in the azure_ai/ml_studio package (AzureAIMLWorkspace, AzureAIMLAssetsDataset, AzureAIMLStudioComputeCluster, AzureAIMLStudioAssetsBatchEndpoint, AzureAIMLStudioAuthoringAutomatedML) or a command module in azure_ai/commands/. Covers the class hierarchy and naming, the get_default_name / get_or_create / delete pattern, the Azure ML SDK v2 (azure-ai-ml) objects each class wraps, logging and error handling, and the checklist for a new class or command.
 ---
 
 # The ml_studio Helpers and Commands
 
 ## The classes
 
-All live in `azure_ai/ml_studio.py`. Names follow the Azure ML Studio menu:
-`AzureAIMLStudio<Menu><Item>` or `AzureAIML<Menu><Item>`.
+They live in the `azure_ai/ml_studio/` package, one module per class. Names
+follow the Azure ML Studio menu: `AzureAIMLStudio<Menu><Item>` or
+`AzureAIML<Menu><Item>`.
 
-| Class                                 | Studio area        | Main methods                                                                                 |
-| ------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------- |
-| `AzureAIMLWorkspace`                  | Workspace          | `connect_workspace()` via `MLClient.from_config()`; base of all the others                   |
-| `AzureAIMLAssetsDataset`              | Assets > Data      | `get_or_create()`, `from_file()`, `from_kaggle()`, `dataset_to_dataframe()`, `delete()`      |
-| `AzureAIMLStudioComputeCluster`       | Compute > Clusters | `get_default_name()`, `get_or_create()`, `create()`                                          |
-| `AzureAIMLStudioAssetsBatchEndpoint`  | Assets > Endpoints | `get_or_create()`, `_create_batch_deployment()`, `invoke_batch_job()`, `delete()`            |
-| `AzureAIMLStudioAuthoringAutomatedML` | Authoring > AutoML | `run_automl_experiment()`, `get_best_model()`, `register_best_model()`, `show_run_details()` |
+| Module                         | Class                                 | Studio area        | Main methods                                                                                 |
+| ------------------------------ | ------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------- |
+| `workspace.py`                 | `AzureAIMLWorkspace`                  | Workspace          | `connect_workspace()` via `MLClient.from_config()`; base of all the others                   |
+| `assets_dataset.py`            | `AzureAIMLAssetsDataset`              | Assets > Data      | `get_or_create()`, `from_file()`, `from_kaggle()`, `dataset_to_dataframe()`, `delete()`      |
+| `ml_studio_compute_cluster.py` | `AzureAIMLStudioComputeCluster`       | Compute > Clusters | `get_default_name()`, `get_or_create()`, `create()`                                          |
+| `assets_batch_endpoint.py`     | `AzureAIMLStudioAssetsBatchEndpoint`  | Assets > Endpoints | `get_or_create()`, `_create_batch_deployment()`, `invoke_batch_job()`, `delete()`            |
+| `authoring_automatedml.py`     | `AzureAIMLStudioAuthoringAutomatedML` | Authoring > AutoML | `run_automl_experiment()`, `get_best_model()`, `register_best_model()`, `show_run_details()` |
+
+What the classes share lives beside them:
+
+- `const.py`: `MLTABLE_TEMPLATE`, `AUTOML_TASKS`, `MODEL_FORMATS`.
+- `exceptions.py`: `is_not_found(error)`, which recognizes each way the SDK
+  reports a missing asset (`ResourceNotFoundError`, or a
+  `ValidationException` of type `RESOURCE_NOT_FOUND`, possibly wrapped in an
+  `MlException`). Use it in every `get_or_create()` lookup.
+- `utils.py`: pure helpers with no Azure calls, `write_mltable_folder()` and
+  `parse_datastore_path()`.
+- `__init__.py` re-exports every public name, so code imports from the
+  package: `from azure_ai.ml_studio import AzureAIMLAssetsDataset`. Modules
+  inside the package import each other relatively (`from .workspace import
+AzureAIMLWorkspace`).
 
 **One SDK: v2 (`azure-ai-ml`).** `AzureAIMLWorkspace.__init__()` creates
 `self.ml_client` with `MLClient.from_config(credential=DefaultAzureCredential())`
@@ -97,15 +112,16 @@ class AzureAIMLStudio<Thing>(AzureAIMLWorkspace):
   `min_nodes=0`, short timeouts).
 - Logging: `logger.info("Found existing cluster: %s", self.cluster_name)`,
   lazy %-style arguments, no f-strings in log calls, no secrets.
-- Error handling: catch the specific "not found" exception
-  (`ResourceNotFoundError` from `azure.core.exceptions`) to fall through to
-  creation; for anything else log
-  `logger.error("Failed to ... %s: %s", name, e)` and re-raise. A deliberate
-  broad `except Exception` carries `# pylint: disable=W0718`.
+- Error handling: fall through to creation only when the lookup says the
+  resource doesn't exist, which `is_not_found(e)` (`exceptions.py`) decides;
+  a lookup by `label="latest"` doesn't raise `ResourceNotFoundError`. For
+  anything else log `logger.error("Failed to ... %s: %s", name, e)` and
+  re-raise, so an auth or network error never creates a second resource. A
+  deliberate broad `except Exception` carries `# pylint: disable=W0718`.
 - Long-running Azure calls wait on a poller's `.result()` (or
   `ml_client.jobs.stream()` for jobs), so a student sees progress.
 - Type-check with the SDK's own types: pyright (what Pylance runs in the
-  editor) and mypy should report no errors on `ml_studio.py`. Narrow
+  editor) and mypy should report no errors on `azure_ai/ml_studio/`. Narrow
   `X | None` values and base types (`Compute`, `Datastore`) with a check that
   raises a clear error, rather than `cast()` or `# type: ignore`.
 - Google-style docstrings (`Args:`, `Returns:`, `Raises:`) that match the
@@ -113,7 +129,9 @@ class AzureAIMLStudio<Thing>(AzureAIMLWorkspace):
 
 ## Adding a class
 
-1. Add it to `ml_studio.py` following the pattern, after the class it depends on.
+1. Add it as its own module in `azure_ai/ml_studio/`, named after its studio
+   area (e.g. `assets_models.py`), following the pattern, and re-export it
+   from `__init__.py` (the import and `__all__`).
 2. Add `azure_ai/tests/test_<thing>.py`: offline tests that fake the
    workspace with `self.mock_azure()`, plus guarded live tests that clean up
    (`azureml-python-testing`).

@@ -83,7 +83,7 @@ months from now.
 - Start with the problem or motivation: what was wrong or missing, and how it
   showed up.
 - Then area by area, a short heading paragraph per area (e.g.
-  `Dataset helper (azure_ai/ml_studio.py):`), then one bullet per change, each
+  `Dataset helper (azure_ai/ml_studio/assets_dataset.py):`), then one bullet per change, each
   saying what changed and why.
 - Name files, classes, methods and commands precisely.
 - Cover the tests: what's new, what they prove, and whether they ran offline

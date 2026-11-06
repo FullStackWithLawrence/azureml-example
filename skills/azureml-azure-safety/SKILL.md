@@ -49,11 +49,15 @@ or log the subscription id, tenant id or keys they return
    then say what it will create.
 3. **Fake before the first run.** When a new test must exercise code that calls
    Azure, add the patches before running it the first time.
-4. **Patch at the point of use.** `ml_studio.py` imports names at module load
-   (`from azure.ai.ml import MLClient`), so patch `azure_ai.ml_studio.MLClient`,
-   `azure_ai.ml_studio.DefaultAzureCredential`, `azure_ai.ml_studio.ContainerClient`
-   and so on; `self.mock_azure()` in `AzureMLTestBase` does the first two.
-   Patching `azure.ai.ml.MLClient` has no effect on `ml_studio`'s
+4. **Patch at the point of use.** Each module in `azure_ai/ml_studio/`
+   imports names at module load (`from azure.ai.ml import MLClient`), so patch
+   the module that uses the name: `azure_ai.ml_studio.workspace.MLClient`,
+   `azure_ai.ml_studio.workspace.DefaultAzureCredential`,
+   `azure_ai.ml_studio.assets_dataset.ContainerClient`,
+   `azure_ai.ml_studio.assets_dataset.kaggle` and so on. `self.mock_azure()` in
+   `AzureMLTestBase` patches `MLClient` and both `DefaultAzureCredential`s.
+   Patching `azure.ai.ml.MLClient`, or the package's re-export
+   `azure_ai.ml_studio.MLClient`, has no effect on a module's
    already-imported name.
 5. **Live tests clean up.** Name what they create with a unique suffix (see
    `test_batch_endpoint.py`'s hash suffix), and delete it in the test or in

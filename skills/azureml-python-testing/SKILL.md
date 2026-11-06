@@ -96,9 +96,26 @@ For extra safety in a local offline run, move `config.json` aside first.
 
 ## Coverage
 
-The offline tests cover about two thirds of `ml_studio.py`; batch endpoint
-creation and Kaggle downloads are the main gaps. `test_automated_ml.py` is
-offline only, on purpose: a live AutoML job costs hours of cluster time.
+**Target:** at least 90% for each module, measured by the offline suite
+(`make coverage`). Higher is better; the suite is at 100% for every module
+in `azure_ai/` and `titanic-survival-app/`, so a change should keep it there
+or say why not. Large blocks of misses in a module, or one module far below
+the target, are not acceptable even when the total looks fine.
+
+To raise it efficiently:
+
+1. Work from the `coverage report -m` output, and rank modules by missed
+   lines, not percentage.
+2. Test behavior through the public interface: the helper class's
+   constructor and methods, the command run as `python3 -m` (see
+   `test_commands.py`, which uses `runpy`), the Function's `predict()`. Don't
+   call private helpers just to touch lines.
+3. An error path counts: give the mock a `side_effect` and assert the error
+   is raised, or the warning logged (`assertLogs("azure_ai.ml_studio")`).
+4. A line no input can reach is dead code. Remove it rather than test it.
+
+`test_automated_ml.py` is offline only, on purpose: a live AutoML job costs
+cluster time.
 
 `coverage` is in `requirements/in/test.in`, and its options are in
 `pyproject.toml`'s `[tool.coverage]` sections: it measures `azure_ai/` (not

@@ -61,7 +61,7 @@ Keep its headings and order, drop the `<!-- -->` hints.
 - **Screenshots:** for notebook plots or Azure portal changes; otherwise
   `None: no visible change.`
 - **Dependencies:** changed pins in `requirements/` or `jupyter/requirements.txt`,
-  new secrets (CI uses `PAT` and `KAGGLE_JSON`), new Azure resources a reader
+  new secrets (CI uses `PAT` and `CODECOV_TOKEN`), new Azure resources a reader
   must create first. Otherwise `None.`
 - **Breaking Changes:** changed class or command signatures, renamed
   notebooks, new required configuration. Otherwise `None.`
@@ -70,14 +70,14 @@ End with the attribution line from the conversation's system context, if any.
 
 ## What runs on a pull request
 
-- `pullRequestController.yml` (`pull_request_target`, Python or requirements
-  changes): a semantic-release dry run, then the offline Python tests.
-- `test.yml` (`pull_request`, `*.py` changes): the offline Python tests.
+- `test.yml` (`pull_request`, every pull request): the offline Python tests
+  with coverage, reported in the job summary and to Codecov.
 - `auto-assign.yml`; Mergify approves and merges dependabot pull requests.
 
-Because `pullRequestController.yml` uses `pull_request_target`, it runs with
-the base repository's secrets. Point out to the user any fork pull request
-that changes `.github/` files.
+No workflow uses `pull_request_target`, so a fork's pull request runs its own
+code without the repository's secrets. Still point out to the user any fork
+pull request that changes `.github/` files: once merged, those run with the
+secrets.
 
 ## Create it
 

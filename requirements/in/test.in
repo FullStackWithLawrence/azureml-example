@@ -12,4 +12,5 @@
 -r base.in
 -r ../../titanic-survival-app/requirements.txt
 
+coverage                                # measures the tests' coverage (make coverage, .github/workflows/test.yml)
 onnx                                    # builds the tiny model that titanic-survival-app's tests run

@@ -32,6 +32,17 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.dynamic]
 version = { attr = "azure_ai.__version__.__version__" }
 
+# coverage.py, for make coverage and .github/workflows/test.yml. Measures the
+# helper classes, the commands and the Azure Function, not the tests themselves.
+[tool.coverage.run]
+source = ["azure_ai", "titanic-survival-app"]
+omit = ["azure_ai/tests/*"]
+relative_files = true
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+
 [tool.isort]
 profile = "black"
 

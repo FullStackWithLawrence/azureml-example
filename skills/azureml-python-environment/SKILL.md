@@ -94,7 +94,8 @@ support it are picked.
 | `make init`, `python-init`                    | **Runs `make clean` first**: deletes `venv/` and `__pycache__` directories. Ask first    |
 | `make python-requirements`                    | Compiles `base`, `local`, `prod` and `test` `.in` files into `requirements/*.txt`        |
 | `make test`                                   | Activates `venv`, runs the tests, **live** unless `GITHUB_ACTIONS=true`                  |
-| `make test-ci`                                | Same without activating a venv (CI)                                                      |
+| `make coverage`                               | Activates `venv`, runs the **offline** tests under coverage, prints the report           |
+| `make test-ci`                                | Without a venv (CI): the tests under coverage, the report and `coverage.xml`             |
 | `make lint`                                   | isort, all pre-commit hooks, black, flake8, pylint on every file                         |
 | `make docker-build/run`                       | Builds and runs the image                                                                |
 | `make docker-push`, `release`, `docker-prune` | Pushes an image, pushes an empty commit, deletes all local Docker images. Never run them |

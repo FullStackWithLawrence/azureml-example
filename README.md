@@ -3,6 +3,7 @@
 [![AzureML](https://a11ybadges.com/badge?logo=microsoft)](https://azure.microsoft.com/en-us/products/machine-learning/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)<br>
 [![Unit Tests](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/test.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/FullStackWithLawrence/azureml-example/main?flag=python&label=coverage&logo=codecov)](https://codecov.io/gh/FullStackWithLawrence/azureml-example)
 ![Release Status](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/release.yml/badge.svg?branch=main)
 ![Auto Assign](https://github.com/FullStackWithLawrence/azureml-example/actions/workflows/auto-assign.yml/badge.svg)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
@@ -70,6 +71,8 @@ make                # scaffold a .env file in the root of the repo
 make init           # Initialize Python virtual environment used for code auto-completion and linting
 make test           # Verify that your Python virtual environment was built correctly and that
                     # the Azure ML SDK finds your config.json file.
+                    #
+make coverage       # Run the offline unit tests (nothing is created in Azure) with a coverage report.
                     #
 make docker-build   # Build and configure all docker containers
 make docker-run     # Run docker container

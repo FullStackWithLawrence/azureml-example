@@ -1,0 +1,29 @@
+---
+#------------------------------------------------------------------------------
+# Codecov configuration
+#
+# .github/workflows/test.yml uploads the offline unit tests' coverage.xml
+# under the python flag. The README's coverage badge shows main's total.
+#
+# Coverage is reported, not enforced: a pull request that lowers it still
+# passes, so that a student's contribution isn't blocked by a percentage.
+#------------------------------------------------------------------------------
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
+
+flags:
+  python:
+    paths:
+      - azure_ai/
+      - titanic-survival-app/
+    carryforward: true
+
+comment:
+  layout: "diff, files"
+  require_changes: true

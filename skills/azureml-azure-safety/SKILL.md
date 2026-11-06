@@ -93,4 +93,4 @@ command to delete them, e.g. `az ml batch-endpoint list -o table` and
 
 `AzureAIMLAssetsDataset.from_kaggle()` downloads with the user's Kaggle key.
 Downloads are free but rate limited, and some datasets need the user to accept
-terms on kaggle.com first. In CI the key comes from the `KAGGLE_JSON` secret.
+terms on kaggle.com first. CI runs only the offline tests, and has no Kaggle key.

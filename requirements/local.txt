@@ -97,6 +97,8 @@ comm==0.2.3
     #   ipywidgets
 contourpy==1.4.0
     # via matplotlib
+coverage==7.17.2
+    # via -r requirements/in/test.in
 cryptography==50.0.2
     # via
     #   azure-identity

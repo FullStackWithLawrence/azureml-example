@@ -1,36 +1,99 @@
 ---
 #------------------------------------------------------------------------------
-# Lawrence McDaniel - https://lawrencemcdaniel.com
-# Run unit tests for Python code in the repository.
+# Test: the offline Python unit tests, with coverage.
 #
+# Runs make test-ci on Python 3.14 with GITHUB_ACTIONS=true, which every
+# runner sets. AzureMLTestBase.is_testable is then false, so the tests that
+# call Azure skip themselves, and the run needs no Azure credentials, no
+# config.json and no Kaggle key. Nothing in Azure is created or billed.
+#
+# Coverage
+#
+# make test-ci runs the tests under coverage.py (options in pyproject.toml's
+# [tool.coverage] sections) and writes coverage.xml. This workflow puts the
+# per-file report in the job summary and uploads coverage.xml to Codecov,
+# which draws the README's coverage badge from main's uploads.
+#
+# Secrets
+#
+# CODECOV_TOKEN, from the repository's page on codecov.io. Pull requests from
+# forks get no secrets; Codecov accepts their uploads without a token.
+#
+# Pull requests from forks run here too: pull_request (unlike
+# pull_request_target) runs the pull request's own code without the
+# repository's secrets, which these tests don't need.
 #------------------------------------------------------------------------------
 name: Test
 
 on:
-  workflow_dispatch:
   pull_request:
-    paths:
-      - "**.py"
   push:
     branches:
       - main
       - next
-    paths:
-      - "**.py"
+  workflow_dispatch:
+
+# A new push to a pull request cancels the run in progress.
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   python-version: "3.14"
 
 jobs:
   python-unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - name: Checkout code
-        id: checkout
-        uses: actions/checkout@v6
-
-      - name: Run Python tests
-        uses: ./.github/actions/tests/python
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
-          python-version: "${{ env.python-version}}"
-          kaggle-json: "${{ secrets.KAGGLE_JSON }}"
+          persist-credentials: false
+
+      # The v1 SDK (azureml-*) is retired and doesn't run on Python 3.14.
+      - name: Check for azure-ai-ml in requirements
+        shell: bash
+        run: |
+          if ! grep -q "^azure-ai-ml==" requirements/base.txt; then
+            echo "azure-ai-ml (the Azure ML SDK v2) not found in requirements/base.txt" >&2
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ env.python-version }}
+          cache: pip
+          cache-dependency-path: requirements/test.txt
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/test.txt
+
+      - name: Run Python unit tests with coverage
+        shell: bash
+        env:
+          GITHUB_ACTIONS: "true"
+        run: |
+          make test-ci
+
+      - name: Coverage summary
+        if: always()
+        shell: bash
+        run: |
+          echo "## Python coverage" >> "$GITHUB_STEP_SUMMARY"
+          coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY" || echo "No coverage data was written." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          files: ./coverage.xml
+          flags: python
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}

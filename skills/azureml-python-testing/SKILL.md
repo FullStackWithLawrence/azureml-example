@@ -100,24 +100,27 @@ The offline tests cover about two thirds of `ml_studio.py`; batch endpoint
 creation and Kaggle downloads are the main gaps. `test_automated_ml.py` is
 offline only, on purpose: a live AutoML job costs hours of cluster time.
 
-No coverage tool is configured. If the user asks, use it ad hoc without adding
-it to the requirements unasked:
+`coverage` is in `requirements/in/test.in`, and its options are in
+`pyproject.toml`'s `[tool.coverage]` sections: it measures `azure_ai/` (not
+`azure_ai/tests/`) and `titanic-survival-app/`. `make coverage` runs the
+offline suite under it, with `GITHUB_ACTIONS=true` set, and prints the
+per-file report with missing lines. It's safe to run: nothing reaches Azure.
 
-```bash
-pip install coverage
-GITHUB_ACTIONS=true coverage run -m unittest discover -s azure_ai/ && coverage report -m --include='azure_ai/*'
-```
+CI uploads `coverage.xml` to Codecov under the `python` flag (`codecov.yml`),
+which draws the README's coverage badge from `main`. Coverage is
+informational: a pull request that lowers it still passes.
 
 ## CI
 
-- `.github/workflows/test.yml` (pushes to `main` and `next`, PRs touching
-  `*.py`) and `pullRequestController.yml` (PRs from forks too, via
-  `pull_request_target`) call `.github/actions/tests/python`, which writes a
-  dummy `config.json`, installs `requirements/test.txt` (the runtime packages
-  plus the Function's `azure-functions`, `numpy`, `onnxruntime`, and `onnx`) on
-  Python 3.14 and runs `make test-ci` with `GITHUB_ACTIONS=true`. A test that
-  needs a new package needs it in `requirements/in/test.in`, or CI fails on
-  the import.
+- `.github/workflows/test.yml` runs on every pull request (forks included,
+  via `pull_request`, without secrets) and on pushes to `main` and `next`. It
+  installs `requirements/test.txt` (the runtime packages plus the Function's
+  `azure-functions`, `numpy`, `onnxruntime`, and `onnx`, and `coverage`) on
+  Python 3.14 and runs `make test-ci` with `GITHUB_ACTIONS=true`: the tests
+  under coverage, the report, and `coverage.xml`. The job summary shows the
+  per-file report. It needs no `config.json` or Kaggle key (kaggle 2.x
+  tolerates a missing key on import). A test that needs a new package needs
+  it in `requirements/in/test.in`, or CI fails on the import.
 - A CI failure that you can't reproduce offline locally is usually an
   environment difference (package versions, Linux vs macOS). Run
   `gh run view <id> --log-failed` to read it.

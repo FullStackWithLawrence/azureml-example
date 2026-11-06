@@ -16,7 +16,7 @@ ifeq ("$(wildcard .env)","")
 endif
 include .env
 
-.PHONY: all init test test-ci clean lint analyze pre-commit pre-commit-init pre-commit-run release \
+.PHONY: all init test coverage test-ci clean lint analyze pre-commit pre-commit-init pre-commit-run release \
 	check-python python-init python-lint python-clean python-requirements \
 	docker-check docker-build docker-push docker-run docker-prune \
 	help
@@ -45,9 +45,20 @@ init:
 test:
 	$(ACTIVATE_VENV) && python -m unittest discover -s azure_ai/
 
-# CI installs the requirements into the runner's Python, without a virtual environment.
+# The offline tests under coverage.py, with a per-file report. GITHUB_ACTIONS=true
+# skips every test that calls Azure, so this never creates billable resources.
+# The options are in pyproject.toml's [tool.coverage] sections.
+coverage:
+	$(ACTIVATE_VENV) && GITHUB_ACTIONS=true coverage run -m unittest discover -s azure_ai/
+	$(ACTIVATE_VENV) && coverage report
+
+# CI (.github/workflows/test.yml) installs the requirements into the runner's
+# Python, without a virtual environment, and sets GITHUB_ACTIONS=true itself.
+# It runs the tests under coverage.py, and writes coverage.xml for Codecov.
 test-ci:
-	python -m unittest discover -s azure_ai/
+	coverage run -m unittest discover -s azure_ai/
+	coverage report
+	coverage xml
 
 clean:
 	make python-clean
@@ -141,10 +152,10 @@ python-requirements:
 	@echo "Compiling and updating Python dependency files using pip-compile ..."
 	@echo "==============================================================================="
 	pip install --upgrade setuptools wheel "pip-tools>=7.6.1"
-	pip-compile requirements/in/base.in -o requirements/base.txt
-	pip-compile requirements/in/local.in -o requirements/local.txt
-	pip-compile requirements/in/prod.in -o requirements/prod.txt
-	pip-compile requirements/in/test.in -o requirements/test.txt
+	pip-compile --strip-extras requirements/in/base.in -o requirements/base.txt
+	pip-compile --strip-extras requirements/in/local.in -o requirements/local.txt
+	pip-compile --strip-extras requirements/in/prod.in -o requirements/prod.txt
+	pip-compile --strip-extras requirements/in/test.in -o requirements/test.txt
 
 # ---------------------------------------------------------
 # Docker
@@ -199,7 +210,8 @@ help:
 	@echo '===================================================================='
 	@echo 'init                   - Initialize the local development environment'
 	@echo 'test                   - Run Python unit tests in the virtual environment'
-	@echo 'test-ci                - Run Python unit tests without a virtual environment (CI)'
+	@echo 'coverage               - Run the offline Python unit tests with a coverage report'
+	@echo 'test-ci                - Run Python unit tests with coverage, without a virtual environment (CI)'
 	@echo 'clean                  - Destroy the Python virtual environment and __pycache__ directories'
 	@echo '<************************** Code Management **************************>'
 	@echo 'lint                   - Run all code linters and formatters'

@@ -26,7 +26,8 @@ well commented, and consistent from one class to the next.
 | `setup_config.py`                           | Interactive helper that installs `config.json`                                                 |
 | `Dockerfile`                                | `python:3.14` image with the Azure CLI and `requirements/prod`                                 |
 | `.pre-commit-config.yaml`                   | The lint and format standard                                                                   |
-| `.github/workflows/`                        | `test.yml`, `pullRequestController.yml`, `release.yml`, `pushMain.yml`, bumps                  |
+| `.github/workflows/`                        | `test.yml` (tests, coverage), `release.yml` (semantic-release), version bumps, auto-assign     |
+| `codecov.yml`                               | Codecov settings for the coverage that `test.yml` uploads (the README badge)                   |
 | `commitlint.config.js`, `release.config.js` | Commit message rules and semantic-release (branches main, beta, alpha)                         |
 
 ## Non-negotiable rules
@@ -70,8 +71,8 @@ unless the task is about them, and don't spread them to new files.
 
 - `docs/CONTRIBUTING.md` and `docs/12-FACTOR.md` mention Smarter, Terraform,
   LangChain, AWS and docker-compose, none of which this repository uses.
-- `.github/actions/tests/pre-commit/action.yml` checks `requirements/dev.txt`,
-  which doesn't exist (it's `local.txt`). No workflow calls it.
+- `.github/actions/merge-branch/action.yml` is a composite action that no
+  workflow calls.
 - Docstrings in `ml_studio.py` sometimes list `Args:` that a method no longer
   takes. When you change a method, correct its docstring.
 

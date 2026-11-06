@@ -1,14 +1,18 @@
 ---
 #------------------------------------------------------------------------------
 # Lawrence McDaniel - https://lawrencemcdaniel.com
-# Version Bump Workflow for Python package openai_utils
+# Semantic Version Bump: azure_ai/__version__.py on alpha and beta.
 #
-# Calculate the version of the 'next' branch based on semantic-release rules.
-# Compares the existing value of __version__.py to the calculated value.
-# If they are different, it will update __version__.py and push the changes
-# to the main branch.
+# Calculates the branch's next version with a semantic-release dry run, and
+# compares it with azure_ai/__version__.py. When they differ, it rewrites
+# __version__.py and pushes the change to the branch that started the run.
+#
+# The commit carries no CI skip tag: it is often the head of the pull request
+# from alpha to main, whose Tests would then never start (see
+# release.config.js). Its own push starts this workflow again, which finds the
+# versions equal and stops.
 #------------------------------------------------------------------------------
-name: Semantic Version Bump (next)
+name: Semantic Version Bump
 
 on:
   workflow_dispatch:
@@ -17,107 +21,81 @@ on:
       - alpha
       - beta
 
+concurrency:
+  group: version-bump-${{ github.ref }}
+  cancel-in-progress: false
+
+# The push uses the PAT secret, not GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
-  bump-version-next:
+  bump-version:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
-      VERSION_FILE: __version__.py
-      PACKAGE_PATH: ${{ github.workspace }}/azure_ai/
+      VERSION_FILE: azure_ai/__version__.py
 
     steps:
-      - uses: actions/checkout@v6
+      # Full history, so that semantic-release finds the last tag.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
+          fetch-depth: 0
           persist-credentials: false
 
-      - name: Cache NPM dependencies
-        uses: actions/cache@v5
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v6
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.14"
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20.9.0"
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
 
-      - name: Install npm dev dependencies
+      - name: Install npm dependencies
         run: npm install
 
+      # The version in azure_ai/__version__.py now.
       - name: Get current version
-        #  step 1
-        # the current version persisted to __version__.py
         id: current_version
+        shell: bash
         run: |
-          cd ${{ env.PACKAGE_PATH }}
-          echo "CURRENT_VERSION=$(python -c 'from azure_ai.__version__ import __version__; print(__version__)')" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          echo "version=$(python -c 'from azure_ai.__version__ import __version__; print(__version__)')" >> "$GITHUB_OUTPUT"
 
-      - name: null step
-        id: null_step1
-        run: echo "i ensure that CURRENT_VERSION is set."
-
+      # The version semantic-release would release from this branch. It prints
+      # nothing when the commits call for no release, so fall back to the
+      # current version.
       - name: Get next version
-        # step 2
-        # calculate the next version based on semantic-release rules
-        # this will return a null string is there in fact is no version bump.
-        # so set NEXT_VERSION to CURRENT_VERSION if there is no version bump.
         id: next_version
-        run: |
-          NEXT_VERSION=$(npx semantic-release --dry-run --no-ci  | awk '/The next release version is/{print $NF}')
-          echo "NEXT_VERSION=${NEXT_VERSION:-${{ env.CURRENT_VERSION }}}" >> $GITHUB_ENV
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          CURRENT_VERSION: ${{ env.CURRENT_VERSION }}
-
-      - name: null step
-        id: null_step2
-        run: echo "i ensure that NEXT_VERSION is set."
-
-      - name: Check versions
-        # step 3
-        # compare the current version to the next version.
-        # if they are different, set VERSION_CHANGED to true
-        id: check_versions
+          CURRENT_VERSION: ${{ steps.current_version.outputs.version }}
         run: |
-          if [ "$CURRENT_VERSION" != "$NEXT_VERSION" ]; then
-            echo "VERSION_CHANGED=true" >> $GITHUB_ENV
-          else
-            echo "VERSION_CHANGED=false" >> $GITHUB_ENV
-          fi
-        env:
-          CURRENT_VERSION: ${{ env.CURRENT_VERSION }}
-          NEXT_VERSION: ${{ env.NEXT_VERSION }}
+          NEXT_VERSION=$(npx semantic-release --dry-run --no-ci | awk '/The next release version is/{print $NF}')
+          echo "version=${NEXT_VERSION:-$CURRENT_VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: another null step
-        id: null_step3
-        run: echo "i ensure that CURRENT_VERSION, NEXT_VERSION and VERSION_CHANGED are set."
+      - name: Summary
+        shell: bash
+        env:
+          CURRENT_VERSION: ${{ steps.current_version.outputs.version }}
+          NEXT_VERSION: ${{ steps.next_version.outputs.version }}
+        run: |
+          echo "Current version: $CURRENT_VERSION. Next version: $NEXT_VERSION." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Update __version__.py
-        # step 4
-        # if VERSION_CHANGED is true, update __version__.py and push the changes to the
-        # branch that triggered this workflow.
-        if: env.VERSION_CHANGED == 'true'
-        id: update_version
+        if: steps.current_version.outputs.version != steps.next_version.outputs.version
+        shell: bash
+        env:
+          NEXT_VERSION: ${{ steps.next_version.outputs.version }}
         run: |
-          echo "# -*- coding: utf-8 -*-" > ${{ env.VERSION_FILE }}
-          echo "# DO NOT EDIT." >> ${{ env.VERSION_FILE }}
-          echo "# Managed via automated CI/CD in .github/workflows/semanticVersionBump.yml." >> ${{ env.VERSION_FILE }}
-          echo "__version__ = \"${{ env.NEXT_VERSION }}\"" >>  ${{ env.VERSION_FILE }}
+          {
+            echo "# -*- coding: utf-8 -*-"
+            echo "# DO NOT EDIT."
+            echo "# Managed via automated CI/CD in .github/workflows/semanticVersionBump.yml."
+            echo "__version__ = \"$NEXT_VERSION\""
+          } > "$VERSION_FILE"
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add ${{ env.VERSION_FILE }}
-          git commit -m "chore: [gh] Update __version__.py to ${{ env.NEXT_VERSION }} [skip ci]"
+          git add "$VERSION_FILE"
+          git commit -m "chore: [gh] Update __version__.py to $NEXT_VERSION"
           git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
-        env:
-          VERSION_FILE: ${{ env.PACKAGE_PATH }}${{ env.VERSION_FILE }}
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-          NEXT_VERSION: ${{ env.NEXT_VERSION }}
-          VERSION_CHANGED: ${{ env.VERSION_CHANGED }}

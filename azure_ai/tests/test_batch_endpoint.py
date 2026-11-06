@@ -128,6 +128,8 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
 
         updated_endpoint = ml_client.batch_endpoints.begin_create_or_update.call_args_list[1].args[0]
         self.assertEqual(updated_endpoint.defaults, {"deployment_name": "best-01-deployment"})
+        if batch_endpoint.endpoint is None:
+            self.fail("The helper class did not keep the endpoint it created")
         self.assertEqual(batch_endpoint.endpoint.name, "my-endpoint")
 
     def test_create_batch_endpoint_default_description_offline(self):
@@ -250,25 +252,38 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
         batch_endpoint.delete()
 
     def test_existing_batch_endpoint(self):
-        """Test that we can retrieve an existing batch endpoint."""
+        """
+        Test that we can retrieve an existing batch endpoint.
+
+        The test creates the endpoint first, since the workspace may have none,
+        then checks that get_default_name() finds one and that a second
+        instance with the same name gets the endpoint rather than creating it.
+        """
         if not self.is_testable:
             logger.warning("Skipping test_existing_batch_endpoint() as the environment is not testable.")
             return
 
-        # First create an endpoint
-        endpoint_name = AzureAIMLStudioAssetsBatchEndpoint.get_default_name(AzureAIMLWorkspace().ml_client)
-        if not endpoint_name:
-            logger.warning("No default endpoint name found, skipping this test.")
-            return
-
-        # Then try to retrieve it
-        existing_endpoint = AzureAIMLStudioAssetsBatchEndpoint(
-            endpoint_name=endpoint_name,
+        created_endpoint = AzureAIMLStudioAssetsBatchEndpoint(
+            endpoint_name=self.endpoint_name,
             model_name=self.model_name,
+            compute_target_name=self.compute_target_name,
+            description=self.description + " - test_existing_batch_endpoint()",
         )
+        try:
+            self.assertIsNotNone(AzureAIMLStudioAssetsBatchEndpoint.get_default_name(AzureAIMLWorkspace().ml_client))
 
-        self.assertIsInstance(existing_endpoint, AzureAIMLStudioAssetsBatchEndpoint)
-        self.assertEqual(existing_endpoint.endpoint_name, endpoint_name)
+            existing_endpoint = AzureAIMLStudioAssetsBatchEndpoint(
+                endpoint_name=self.endpoint_name,
+                model_name=self.model_name,
+                compute_target_name=self.compute_target_name,
+            )
+
+            self.assertEqual(existing_endpoint.endpoint_name, self.endpoint_name)
+            if existing_endpoint.endpoint is None or created_endpoint.endpoint is None:
+                self.fail("The helper class did not keep the endpoint it found or created")
+            self.assertEqual(existing_endpoint.endpoint.name, created_endpoint.endpoint.name)
+        finally:
+            created_endpoint.delete()
 
     def test_batch_endpoint_with_custom_settings(self):
         """Test batch endpoint creation with custom deployment settings."""
@@ -324,5 +339,6 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
         # pylint: disable=W0718
         except Exception as e:
             self.fail(f"Batch job invocation failed: {e}")
-
-        batch_endpoint.delete()
+        finally:
+            batch_endpoint.delete()
+            test_dataset.delete()

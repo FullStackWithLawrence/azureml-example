@@ -70,9 +70,19 @@ End with the attribution line from the conversation's system context, if any.
 
 ## What runs on a pull request
 
-- `test.yml` (`pull_request`, every pull request): the offline Python tests
-  with coverage, reported in the job summary and to Codecov.
+- `test.yml` (`pull_request`): its `changes` job checks whether the pull
+  request touches the Python code, the Function, the requirements or the test
+  settings. If it does, `python-unit-tests` runs the offline tests with
+  coverage, reported in the job summary and to Codecov. If not, the job is
+  skipped, which counts as passing.
 - `auto-assign.yml`; Mergify approves and merges dependabot pull requests.
+
+Main is protected by the `pr-required` ruleset (Settings > Rules), modelled on
+smarter's: no deletion or force push, changes through a pull request (0
+approvals), and the `python-unit-tests` check must pass. Repository admins
+bypass it, which is how semantic-release's PAT pushes its release commit. If
+the check's job is renamed, update the ruleset too, or every pull request
+waits forever for the old name.
 
 No workflow uses `pull_request_target`, so a fork's pull request runs its own
 code without the repository's secrets. Still point out to the user any fork

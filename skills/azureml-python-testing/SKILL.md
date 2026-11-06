@@ -134,8 +134,14 @@ informational: a pull request that lowers it still passes.
 
 ## CI
 
-- `.github/workflows/test.yml` runs on every pull request (forks included,
-  via `pull_request`, without secrets) and on pushes to `main` and `next`. It
+- `.github/workflows/test.yml` tests only changes to a path the tests depend
+  on (`azure_ai/`, `titanic-survival-app/`, `requirements/`, the Makefile,
+  `pyproject.toml`, `codecov.yml` or the workflow itself). Pushes to `main`
+  and `next` filter with `on.push.paths`. Every pull request (forks included,
+  via `pull_request`, without secrets) starts the workflow, and its `changes`
+  job decides, so that `python-unit-tests`, main's required status check,
+  always reports (a skipped job counts as passing). Keep the two path lists
+  in step. The `python-unit-tests` job
   installs `requirements/test.txt` (the runtime packages plus the Function's
   `azure-functions`, `numpy`, `onnxruntime`, and `onnx`, and `coverage`) on
   Python 3.14 and runs `make test-ci` with `GITHUB_ACTIONS=true`: the tests

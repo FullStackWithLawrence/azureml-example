@@ -22,15 +22,32 @@
 # Pull requests from forks run here too: pull_request (unlike
 # pull_request_target) runs the pull request's own code without the
 # repository's secrets, which these tests don't need.
+#
+# Paths
+#
+# The tests run only when something they depend on changes: the Python
+# package and its tests, the Azure Function they test, the requirements, the
+# Makefile target and coverage settings, and this workflow. A commit that
+# touches only docs, notebooks or other workflows (Dependabot's action bumps,
+# for example) doesn't start them. workflow_dispatch still runs them on demand.
 #------------------------------------------------------------------------------
 name: Test
 
 on:
   pull_request:
+    paths: &test-paths
+      - "azure_ai/**"
+      - "titanic-survival-app/**"
+      - "requirements/**"
+      - "Makefile"
+      - "pyproject.toml"
+      - "codecov.yml"
+      - ".github/workflows/test.yml"
   push:
     branches:
       - main
       - next
+    paths: *test-paths
   workflow_dispatch:
 
 # A new push to a pull request cancels the run in progress.

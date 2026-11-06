@@ -2,120 +2,221 @@ SHELL := /bin/bash
 REPO_NAME := azureml-example
 
 ifeq ($(OS),Windows_NT)
-    PYTHON = python.exe
-    ACTIVATE_VENV = venv\Scripts\activate
+    PYTHON := python.exe
+    ACTIVATE_VENV := venv/Scripts/activate
 else
-    PYTHON = python3.9
-    ACTIVATE_VENV = source ./venv/bin/activate
+    PYTHON := python3.14
+    ACTIVATE_VENV := source venv/bin/activate
 endif
-PIP = $(PYTHON) -m pip
+PIP := $(PYTHON) -m pip
 
-ifneq ("$(wildcard .env)","")
-    include .env
-else
-    $(shell echo -e "ENVIRONMENT=dev\nAZUREML_CONFIG_PATH=./config.json\n\nDOCKERHUB_USERNAME=localhost\nDOCKERHUB_ACCESS_TOKEN=SET-ME-PLEASE\nPYTHONPATH=./venv:./azure_ai\n" >> .env)
+# scaffold .env from .env.example on first use
+ifeq ("$(wildcard .env)","")
+    $(shell cp .env.example .env)
 endif
+include .env
 
-.PHONY: analyze pre-commit init lint clean test build release all python-init docker-build docker-push docker-run docker-prune help
+.PHONY: all init test test-ci clean lint analyze pre-commit pre-commit-init pre-commit-run release \
+	check-python python-init python-lint python-clean python-requirements \
+	docker-check docker-build docker-push docker-run docker-prune \
+	help
 
 # Default target executed when no arguments are given to make.
 all: help
 
-# -------------------------------------------------------------------------
-# Install and run pre-commit hooks
-# -------------------------------------------------------------------------
-pre-commit:
-	pre-commit install
-	pre-commit autoupdate
-	pre-commit run --all-files
+# initialize local development environment.
+init:
+	@echo "==============================================================================="
+	@echo "Initializing local development environment. This will verify and set up your"
+	@echo "Python virtual environment, install all 3rd-party package requirements,"
+	@echo "and install the pre-commit hooks. This may take a few minutes..."
+	@echo "==============================================================================="
+	make check-python							# verify Python 3.14 is installed
+	make python-init							# create/replace Python virtual environment and install dependencies
+	make pre-commit-init						# install and configure pre-commit
+	@echo ""
+	@echo "==============================================================================="
+	@echo "Initialization complete!"
+	@echo ""
+	@echo "Run 'source venv/bin/activate' to activate the Python virtual environment."
+	@echo "    'make help' to see all available commands."
+	@echo "==============================================================================="
+
+test:
+	$(ACTIVATE_VENV) && python -m unittest discover -s azure_ai/
+
+# CI installs the requirements into the runner's Python, without a virtual environment.
+test-ci:
+	python -m unittest discover -s azure_ai/
+
+clean:
+	make python-clean
 
 # ---------------------------------------------------------
-# create a local python virtual environment. Includes linters
-# and other tools for local development.
+# Code management
 # ---------------------------------------------------------
+
+lint:
+	make python-lint
+
+analyze:
+	@echo "==============================================================================="
+	@echo "Generating code analysis report using cloc ..."
+	@echo "==============================================================================="
+	cloc . --exclude-ext=svg,json,zip,csv,yml,yaml --vcs=git
+
+pre-commit:
+	make pre-commit-init
+	make pre-commit-run
+
+pre-commit-init:
+	@echo "==============================================================================="
+	@echo "Installing and configuring pre-commit ..."
+	@echo "==============================================================================="
+	pre-commit install
+	pre-commit autoupdate
+
+pre-commit-run:
+	@echo "==============================================================================="
+	@echo "Running pre-commit hooks on all files ..."
+	@echo "==============================================================================="
+	pre-commit run --all-files
+
+release:
+	@echo "==============================================================================="
+	@echo "Forcing a new semantic release on GitHub by creating an empty commit and pushing to the repository ..."
+	@echo "==============================================================================="
+	git commit -m "fix: force a new release" --allow-empty && git push
+
+# ---------------------------------------------------------
+# Python
+# ---------------------------------------------------------
+check-python:
+	@echo ""
+	@echo "==============================================================================="
+	@echo "Verifying that Python $(PYTHON) is installed ..."
+	@echo "==============================================================================="
+	@echo ""
+	@command -v $(PYTHON) >/dev/null 2>&1 || { \
+	echo >&2 "This project requires $(PYTHON) but it's not installed.  Aborting."; \
+	echo >&2 "python --version output:"; \
+	python --version 2>&1; \
+	exit 1; \
+}
+
 python-init:
-	make clean
+	@echo "==============================================================================="
+	@echo "Initializing Python virtual environment and installing dependencies. This may take a few minutes..."
+	@echo "==============================================================================="
+	make check-python
+	make python-clean && \
+	npm install && \
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
 	$(PIP) install --upgrade pip && \
-	$(PIP) install -r requirements/local.txt && \
-	deactivate
+	$(PIP) install setuptools wheel pip-tools && \
+	$(PIP) install -r requirements/local.txt
 
-######################
-# CORE COMMANDS
-######################
-init:
-	make clean && \
-	make python-init && \
-	npm install && \
-	$(ACTIVATE_VENV) && \
-	$(PIP) install -r requirements/local.txt && \
-	pre-commit install && \
-	deactivate
+python-lint:
+	@echo ""
+	@echo "==============================================================================="
+	@echo "Running Python linting using pre-commit and pylint ..."
+	@echo "==============================================================================="
+	@echo ""
+	make check-python
+	make pre-commit-run
+	pylint ./azure_ai/
 
-test:
-	$(ACTIVATE_VENV) && python -m unittest discover -s azure_ai/; \
+python-clean:
+	@echo ""
+	@echo "==============================================================================="
+	@echo "Cleaning Python virtual environment and __pycache__ directories ..."
+	@echo "==============================================================================="
+	@echo ""
+	rm -rf venv
+	find ./azure_ai/ -name __pycache__ -type d -exec rm -rf {} +
 
-test-ci:
-	python -m unittest discover -s azure_ai/;
+python-requirements:
+	@echo "==============================================================================="
+	@echo "Compiling and updating Python dependency files using pip-compile ..."
+	@echo "==============================================================================="
+	pip install --upgrade setuptools wheel "pip-tools>=7.6.1"
+	pip-compile requirements/in/base.in -o requirements/base.txt
+	pip-compile requirements/in/local.in -o requirements/local.txt
+	pip-compile requirements/in/prod.in -o requirements/prod.txt
 
-lint:
-	isort . && \
-	pre-commit run --all-files && \
-	black . && \
-	flake8 ./azure_ai/ && \
-	pylint ./azure_ai/**/*.py
+# ---------------------------------------------------------
+# Docker
+# ---------------------------------------------------------
+docker-check:
+	@echo ""
+	@echo "==============================================================================="
+	@echo "Verifying that Docker is installed and running ..."
+	@echo "==============================================================================="
+	@echo ""
+	@docker ps >/dev/null 2>&1 || { echo >&2 "This project requires Docker but it's not running.  Aborting."; exit 1; }
 
-clean:
-	rm -rf venv node_modules azure_ai/__pycache__ package-lock.json
-
-analyze:
-	cloc . --exclude-ext=svg,json,zip,csv,yml,yaml --vcs=git
-
-release:
-	git commit -m "fix: force a new release" --allow-empty && git push
-
-######################
-# DOCKER
-######################
 docker-build:
+	@echo "==============================================================================="
+	@echo "Building the Docker image ..."
+	@echo "==============================================================================="
+	make docker-check && \
 	docker build -t ${DOCKERHUB_USERNAME}/${REPO_NAME} .
 
 docker-push:
-	source .env && \
+	@echo "==============================================================================="
+	@echo "Pushing the Docker image to DockerHub ..."
+	@echo "==============================================================================="
+	make docker-check && \
 	docker tag ${DOCKERHUB_USERNAME}/${REPO_NAME} ${DOCKERHUB_USERNAME}/${REPO_NAME}:latest && \
 	echo "${DOCKERHUB_ACCESS_TOKEN}" | docker login --username=${DOCKERHUB_USERNAME} --password-stdin && \
 	docker push ${DOCKERHUB_USERNAME}/${REPO_NAME}:latest
 
 docker-run:
-	source .env && \
+	make docker-check && \
 	docker run -it -e OPENAI_API_KEY=${OPENAI_API_KEY} -e ENVIRONMENT=prod ${DOCKERHUB_USERNAME}/${REPO_NAME}:latest
 
-
 docker-prune:
+	@echo ""
+	@echo "==============================================================================="
+	@echo "Pruning Docker images, containers and build cache. "
+	@echo "This will free up drive space by removing all unused Docker objects..."
+	@echo "==============================================================================="
+	make docker-check
 	@if [ "`docker ps -aq`" ]; then \
-	    docker stop $(docker ps -aq); \
+	    docker stop $$(docker ps -aq); \
 	fi
 	@docker container prune -f
 	@docker image prune -af
 	@docker builder prune -af
 
-######################
-# HELP
-######################
+# ---------------------------------------------------------
+# Help
+# ---------------------------------------------------------
 
 help:
 	@echo '===================================================================='
-	@echo 'analyze         - generate code analysis report'
-	@echo 'release         - force a new GitHub release'
-	@echo 'init            - create a Python virtual environment and install prod dependencies'
-	@echo 'python-init     - create a Python virtual environment with local dependencies'
-	@echo 'pre-commit      - install and run pre-commit hooks'
-	@echo 'test            - run Python unit tests'
-	@echo 'lint            - run Python linting'
-	@echo 'clean           - destroy the Python virtual environment'
-	@echo 'docker-build    - build the Docker image'
-	@echo 'docker-push     - push the Docker image to DockerHub'
-	@echo 'docker-run      - run the Docker image'
-	@echo 'docker-prune    - clean up Docker containers and images'
+	@echo 'init                   - Initialize the local development environment'
+	@echo 'test                   - Run Python unit tests in the virtual environment'
+	@echo 'test-ci                - Run Python unit tests without a virtual environment (CI)'
+	@echo 'clean                  - Destroy the Python virtual environment and __pycache__ directories'
+	@echo '<************************** Code Management **************************>'
+	@echo 'lint                   - Run all code linters and formatters'
+	@echo 'analyze                - Generate code analysis report using cloc'
+	@echo 'pre-commit             - Install, configure and run pre-commit hooks'
+	@echo 'pre-commit-init        - Install and configure pre-commit'
+	@echo 'pre-commit-run         - Run all pre-commit hooks on all files'
+	@echo 'release                - Force a new GitHub release'
+	@echo '<************************** Python **************************>'
+	@echo 'check-python           - Verify Python 3.14 is installed'
+	@echo 'python-init            - Create a Python virtual environment and install dependencies'
+	@echo 'python-lint            - Run Python linting using pre-commit and pylint'
+	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
+	@echo 'python-requirements    - Compile requirements/in/*.in into requirements/*.txt'
+	@echo '<************************** Docker **************************>'
+	@echo 'docker-check           - Verify Docker is installed and running'
+	@echo 'docker-build           - Build the Docker image'
+	@echo 'docker-push            - Push the Docker image to DockerHub'
+	@echo 'docker-run             - Run the Docker image'
+	@echo 'docker-prune           - Stop all containers and remove unused Docker objects'
 	@echo '===================================================================='

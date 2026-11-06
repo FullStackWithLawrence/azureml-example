@@ -1,0 +1,38 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      The common runtime requirements, shared by local development,
+#             the Docker image and CI.
+#
+#             pip-compile --upgrade requirements/in/base.in -o requirements/base.txt
+# -----------------------------------------------------------------------------
+
+-r constraints.in
+
+# General
+# ------------
+python-dotenv                           # for loading environment variables from .env files
+kaggle                                  # for Kaggle api access
+openpyxl                                # for Excel file support from kaggle datasets
+
+# Data science
+# ------------
+pandas                                  # for data manipulation
+seaborn                                 # for data visualization
+scikit-learn                            # for machine learning algorithms
+scipy                                   # for scientific computing
+shap                                    # for model interpretability
+
+# Azure ML SDK - essential components only
+# ------------
+azureml-core                            # Azure ML v1 SDK: workspaces, experiments, datastores
+azureml-train-core                      # Azure ML v1 SDK: training runs
+azureml-pipeline-core                   # Azure ML v1 SDK: pipelines
+azureml-train-automl                    # Azure ML v1 SDK: AutoML
+azureml-widgets                         # Azure ML v1 SDK: Jupyter run widgets
+
+# Azure AI SDK - essential components only
+# ------------
+azure-ai-ml                             # Azure ML v2 SDK
+azure-storage-blob                      # Azure Blob Storage client

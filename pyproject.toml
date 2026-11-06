@@ -1,44 +1,62 @@
 [project]
-name = "Smarter"
-version = "0.10.24"
-requires-python = ">=3.10"
+name = "azureml-example"
+dynamic = ["version"]
+requires-python = ">=3.14"
+description = "Azure Machine Learning - Automated ML Example"
+authors = [{ name = "Lawrence McDaniel", email = "lpm0073@gmail.com" }]
+license = { file = "LICENSE" }
+keywords = ["AI", "Azure", "Azure Machine Learning", "AutoML", "Python"]
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Natural Language :: English",
+]
 
 [project.urls]
 homepage = "https://github.com/FullStackWithLawrence/azureml-example"
 documentation = "https://github.com/FullStackWithLawrence/azureml-example"
 repository = "https://github.com/FullStackWithLawrence/azureml-example"
+bugtracker = "https://github.com/FullStackWithLawrence/azureml-example/issues"
+changelog = "https://github.com/FullStackWithLawrence/azureml-example/blob/main/CHANGELOG.md"
+
+[build-system]
+requires = ["setuptools>=80.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# semantic-release (.github/workflows/semanticVersionBump.yml) writes the version to azure_ai/__version__.py.
+[tool.setuptools.dynamic]
+version = { attr = "azure_ai.__version__.__version__" }
 
 [tool.isort]
 profile = "black"
-lines_after_imports = 2
 
 [tool.black]
 line-length = 120
-target-version = ['py312']
+target-version = ['py314']
 include = '\.pyi?$'
 exclude = '''
 /(
     \.git
-  | \.hg
   | \.mypy_cache
   | \.tox
   | \.venv
   | \.env
   | venv
+  | venv3\.12
   | node_modules
-  | build
-  | buck-out
   | build
   | dist
   | __pypackages__
-  | staticfiles
-  |.pypi_cache
-  | .pytest_cache
-  | .coverage
-  | keen_v3.0.6
-  | mysql-data
+  | \.pypi_cache
+  | \.pytest_cache
+  | \.coverage
   | htmlcov
-  | .eggs
-  | .idea
+  | \.eggs
+  | \.idea
 )/
 '''

@@ -1,0 +1,30 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage: developer support packages for code syntax and type checking, testing,
+#        formatting, security and quality
+#
+#       pip-compile --upgrade requirements/in/local.in -o requirements/local.txt
+# -----------------------------------------------------------------------------
+
+-r constraints.in
+-r base.in
+
+pip-tools                               # pip-compile, for regenerating the requirements/*.txt files
+
+azure-functions                         # used for linting code in ./titanic-survival-app/__init__.py
+
+# Code linters, formatters, and security scanners
+# ------------
+bandit                                  # security linter
+black                                   # code formatter
+codespell                               # typo checker
+flake8                                  # code linter
+flake8-coding                           # coding style linter
+isort                                   # import sorter
+mypy                                    # static type checker
+pre-commit                              # git hook manager
+pydocstringformatter                    # docstring formatter
+pylint                                  # code linter
+tox                                     # testing tool

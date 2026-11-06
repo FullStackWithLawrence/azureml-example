@@ -1,0 +1,15 @@
+# -----------------------------------------------------------------------------
+# written by: Lawrence McDaniel
+#             https://lawrencemcdaniel.com
+#
+# usage:      the unit tests' requirements, for CI and local development:
+#             the runtime requirements plus titanic-survival-app's.
+#
+#             pip-compile --upgrade requirements/in/test.in -o requirements/test.txt
+# -----------------------------------------------------------------------------
+
+-r constraints.in
+-r base.in
+-r ../../titanic-survival-app/requirements.txt
+
+onnx                                    # builds the tiny model that titanic-survival-app's tests run

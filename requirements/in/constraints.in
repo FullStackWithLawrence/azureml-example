@@ -8,5 +8,5 @@
 #             Compile every .in file with Python 3.14, the Makefile's
 #             interpreter, so that pip-compile only picks releases that support it.
 # -----------------------------------------------------------------------------
-pandas<2                                # the Azure ML v1 SDK (azureml-train-automl 1.60.x) requires pandas 1.5.x
-scikit-learn<1.6                        # AutoML pins scikit-learn 1.5.x
+# None at present. The Azure ML v1 SDK's pins on pandas 1.5 and scikit-learn 1.5
+# went away with the move to the v2 SDK (azure-ai-ml).

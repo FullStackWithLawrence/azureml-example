@@ -14,6 +14,7 @@
 # ------------
 python-dotenv                           # for loading environment variables from .env files
 kaggle                                  # for Kaggle api access
+six                                     # kaggle imports six but doesn't declare it
 openpyxl                                # for Excel file support from kaggle datasets
 
 # Data science
@@ -24,15 +25,8 @@ scikit-learn                            # for machine learning algorithms
 scipy                                   # for scientific computing
 shap                                    # for model interpretability
 
-# Azure ML SDK - essential components only
+# Azure Machine Learning SDK v2
 # ------------
-azureml-core                            # Azure ML v1 SDK: workspaces, experiments, datastores
-azureml-train-core                      # Azure ML v1 SDK: training runs
-azureml-pipeline-core                   # Azure ML v1 SDK: pipelines
-azureml-train-automl                    # Azure ML v1 SDK: AutoML
-azureml-widgets                         # Azure ML v1 SDK: Jupyter run widgets
-
-# Azure AI SDK - essential components only
-# ------------
-azure-ai-ml                             # Azure ML v2 SDK
-azure-storage-blob                      # Azure Blob Storage client
+azure-ai-ml                             # Azure ML v2 SDK: workspaces, data assets, compute, AutoML jobs, endpoints
+azure-identity                          # DefaultAzureCredential, for authenticating MLClient
+azure-storage-blob                      # Azure Blob Storage client, for downloading data assets

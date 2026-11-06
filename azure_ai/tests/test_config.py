@@ -1,78 +1,52 @@
-"""
-Test script to verify Azure ML installation is working properly.
-"""
+"""Test script to verify Azure ML installation is working properly."""
 
 import os
+import sys
 from logging import getLogger
 
 from dotenv import load_dotenv
 
 from .test_base import AzureMLTestBase
 
-
 load_dotenv()
 logger = getLogger(__name__)
 
 
 class AzureMLTestConfig(AzureMLTestBase):
-    """Base class for all unit tests."""
+    """Tests of the Python environment and the workspace configuration."""
 
-    # pylint: disable=C0415,W0611,W0401,W0718
+    def test_python_version(self):
+        """Test that the tests run on Python 3.14 or later, the version this repository targets."""
+        self.assertGreaterEqual(sys.version_info[:2], (3, 14))
+
+    # pylint: disable=C0415,W0611,R0914
     def test_azureml_imports(self):
-        """Test that we can import core Azure ML modules."""
+        """Test that we can import the Azure ML SDK v2 modules that azure_ai.ml_studio uses."""
         try:
-            import azureml.core
+            import azure.ai.ml
 
-            print(f"✅ Azure ML Core version: {azureml.core.VERSION}")
+            print(f"✅ Azure ML SDK v2 (azure-ai-ml) version: {azure.ai.ml.__version__}")
 
-            from azureml.core import Environment, Experiment, Workspace
+            from azure.ai.ml import Input, MLClient, Output, automl
+            from azure.ai.ml.entities import (
+                AmlCompute,
+                BatchEndpoint,
+                Data,
+                Model,
+                ModelBatchDeployment,
+            )
+            from azure.identity import DefaultAzureCredential
+            from azure.storage.blob import ContainerClient
 
-            print("✅ Azure ML Core classes imported successfully")
-
-            from azureml.train.dnn import TensorFlow
-            from azureml.train.sklearn import SKLearn
-
-            print("✅ Azure ML Training estimators imported successfully")
-
-            try:
-                from azureml.pipeline.core import Pipeline, PipelineData
-
-                print("✅ Azure ML Pipeline components imported successfully")
-            except ImportError:
-                print("⚠️  Some pipeline components not available (dependency conflicts)")
-                logger.warning(
-                    "Pipeline and PipelineData are not available due to dependency conflicts. "
-                    "Please check your environment setup. "
-                    "This will not prevent running experiments, but some pipeline features may be limited."
-                )
-
-            try:
-                from azureml.core import Dataset, Experiment, Workspace
-                from azureml.core.compute import AmlCompute, ComputeTarget
-                from azureml.core.compute_target import ComputeTargetException
-                from azureml.core.run import Run
-                from azureml.data.azure_storage_datastore import AzureBlobDatastore
-                from azureml.data.file_dataset import FileDataset
-                from azureml.data.tabular_dataset import TabularDataset
-
-                print("✅ Azure ML Pipeline components imported successfully")
-            except ImportError:
-                self.fail(
-                    "Azure ML Pipeline components are not available. "
-                    "Please ensure you have installed the Azure ML SDK with `pip install azureml-sdk[automl]`."
-                )
+            print("✅ Azure ML SDK v2 classes imported successfully")
 
         except ImportError as e:
             print(f"❌ Import error: {e}")
             self.fail(
-                "Azure ML SDK is not installed or the Python import failed. "
-                "Please ensure you have installed the Azure ML SDK with `pip install azureml-sdk`. "
-                "Also ensure that your Python environment is set up correctly with all dependencies installed "
-                "and that it is activated before running this test."
+                "Azure ML SDK v2 is not installed or the Python import failed. "
+                "Please ensure you have installed the requirements with `pip install -r requirements/local.txt`, "
+                "and that your Python environment is activated before running this test."
             )
-        except Exception as e:
-            print(f"❌ Unexpected error: {e}")
-            self.fail(f"Unexpected error during imports: {e}")
 
     def test_workspace_connection(self):
         """Test workspace connection using config.json."""
@@ -81,54 +55,46 @@ class AzureMLTestConfig(AzureMLTestBase):
             logger.warning("Skipping test_workspace_connection() as the environment is not testable.")
             return
 
-        try:
-            from azureml.core import Workspace
+        from azure.ai.ml import MLClient
+        from azure.identity import DefaultAzureCredential
 
-            # Check if config.json exists
-            config_paths = [
-                "./config.json",  # Project root
-                "../config.json",  # Parent directory (if running from tests/)
-                "../../config.json",  # Two levels up
-                os.path.expanduser("~/.azureml/config.json"),  # User's home directory
-            ]
+        # Check if config.json exists
+        config_paths = [
+            "./config.json",  # Project root
+            "../config.json",  # Parent directory (if running from tests/)
+            "../../config.json",  # Two levels up
+            "./.azureml/config.json",  # MLClient.from_config() also looks here
+        ]
 
-            config_found = False
-            for config_path in config_paths:
-                if os.path.exists(config_path):
-                    print(f"✅ Found config.json at: {config_path}")
-                    config_found = True
-                    break
+        config_found = False
+        for config_path in config_paths:
+            if os.path.exists(config_path):
+                print(f"✅ Found config.json at: {config_path}")
+                config_found = True
+                break
 
-            if not config_found:
-                print("⚠️  No config.json found. Please place your Azure ML config.json in:")
-                print("   - Project root: ./config.json")
-                print("   - User directory: ~/.azureml/config.json")
-                self.fail("config.json not found in expected locations")
-
-            # Try to connect to workspace
-            print("🔄 Attempting to connect to Azure ML workspace...")
-            ws = Workspace.from_config()
-            print(f"✅ Successfully connected to workspace: {ws.name}")
-            print(f"   Subscription: {ws.subscription_id}")
-            print(f"   Resource Group: {ws.resource_group}")
-            print(f"   Location: {ws.location}")
-
-        except FileNotFoundError:
-            print("❌ config.json not found. Please download it from Azure ML Studio:")
+        if not config_found:
+            print("⚠️  No config.json found. Please place your Azure ML config.json in the project root.")
             print("   1. Go to Azure ML Studio (https://ml.azure.com)")
             print("   2. Select your workspace")
             print("   3. Click the download icon next to workspace name")
             print("   4. Save config.json to your project root")
             self.fail("config.json not found in expected locations")
 
-        except ImportError as e:
-            print(f"❌ Azure ML import error: {e}")
-            self.fail("Azure ML SDK not installed or import failed")
+        try:
+            print("🔄 Attempting to connect to Azure ML workspace...")
+            ml_client = MLClient.from_config(credential=DefaultAzureCredential())
+            ws = ml_client.workspaces.get(ml_client.workspace_name)
+            if ws is None:
+                self.fail("The workspace in config.json was not found")
+            print(f"✅ Successfully connected to workspace: {ws.name}")
+            print(f"   Location: {ws.location}")
+        # pylint: disable=W0718
         except Exception as e:
             print(f"❌ Workspace connection error: {e}")
             print("   This could be due to:")
             print("   - Invalid config.json file")
             print("   - Network connectivity issues")
-            print("   - Azure authentication problems")
+            print("   - Azure authentication problems (run `az login`)")
             print("   - Insufficient permissions")
             self.fail("Workspace connection failed due to unexpected error")

@@ -8,7 +8,7 @@ branding:
   color: "orange"
 inputs:
   python-version:
-    description: "The version of Python to use, such as 3.9"
+    description: "The version of Python to use, such as 3.14"
     required: true
     type: string
   kaggle-json:
@@ -39,11 +39,11 @@ runs:
         echo '${{ inputs.kaggle-json }}' > ~/.kaggle/kaggle.json
         chmod 600 ~/.kaggle/kaggle.json
 
-    - name: Check for azureml-core in requirements
+    - name: Check for azure-ai-ml in requirements
       shell: bash
       run: |
-        if ! grep -q "azureml-core" requirements/base.txt; then
-          echo "azureml-core not found in requirements/base.txt" >&2
+        if ! grep -q "^azure-ai-ml==" requirements/base.txt; then
+          echo "azure-ai-ml (the Azure ML SDK v2) not found in requirements/base.txt" >&2
           exit 1
         fi
 
@@ -51,7 +51,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements/prod.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements/test.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip
 
@@ -73,7 +73,7 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
-        pip install -r requirements/prod.txt
+        pip install -r requirements/test.txt
       env:
         SITE_PACKAGES_PATH: ${{ env.SITE_PACKAGES_PATH }}
 

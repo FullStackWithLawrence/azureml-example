@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Setup script to help configure Azure ML config.json securely.
-"""
+"""Setup script to help configure Azure ML config.json securely."""
 
 import json
 import os
@@ -124,7 +122,7 @@ def main():
         print("\n" + "=" * 40)
         print("✅ Setup complete!")
         print("\nNext steps:")
-        print("1. Run the test: python azure_ai/tests/test_azureml.py")
+        print("1. Run the test: python -m unittest azure_ai.tests.test_config")
         print("2. Start developing with Azure ML")
     else:
         print("\n" + "=" * 40)

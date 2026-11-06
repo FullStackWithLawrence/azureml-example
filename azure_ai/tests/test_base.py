@@ -1,14 +1,11 @@
-"""
-Test script to verify Azure ML installation is working properly.
-"""
+"""Base class for the unit tests."""
 
 import os
 import unittest
 from logging import getLogger
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from dotenv import load_dotenv
-
 
 load_dotenv()
 logger = getLogger(__name__)
@@ -32,44 +29,38 @@ class AzureMLTestBase(unittest.TestCase):
     def tearDownClass(cls):
         """Clean up class-level resources."""
         if not cls.is_testable:
-            try:
-                patchers = [
-                    "ml_client_patcher",
-                    "credential_patcher",
-                    "dataset_v2_patcher",
-                    "workspace_patcher",
-                    "dataset_v1_patcher",
-                    "compute_patcher",
-                    "experiment_patcher",
-                ]
-                for patcher_name in patchers:
-                    if hasattr(cls, patcher_name):
-                        getattr(cls, patcher_name).stop()
-            # pylint: disable=W0718
-            except Exception as e:
-                logger.error(f"Error during tearDownClass: {e}")
+            for patcher_name in ("ml_client_patcher", "credential_patcher"):
+                if hasattr(cls, patcher_name):
+                    getattr(cls, patcher_name).stop()
 
     @classmethod
     def _setup_azure_mocks(cls):
-        """Set up mocks for Azure ML clients when not testable."""
+        """
+        Replace MLClient and DefaultAzureCredential with mocks.
+
+        No test can then reach Azure in a CI-CD environment. The patches target azure_ai.ml_studio, where the names are used:
+        ml_studio imported them when it was loaded, so patching them in
+        azure.ai.ml or azure.identity would not affect it.
+        """
         logger.info("Setting up Azure ML mocks for non-testable CI-CD environment")
 
-        # Patch at the source before any imports happen
-        cls.ml_client_patcher = patch("azure.ai.ml.MLClient")
+        cls.ml_client_patcher = patch("azure_ai.ml_studio.MLClient")
         cls.mock_ml_client = cls.ml_client_patcher.start()
 
-        cls.credential_patcher = patch("azure.identity.DefaultAzureCredential")
+        cls.credential_patcher = patch("azure_ai.ml_studio.DefaultAzureCredential")
         cls.mock_credential = cls.credential_patcher.start()
 
-        # Also patch other Azure classes at their source
-        cls.workspace_patcher = patch("azureml.core.Workspace")
-        cls.mock_workspace = cls.workspace_patcher.start()
+    def mock_azure(self) -> MagicMock:
+        """
+        Fake the workspace connection for one offline test, in any environment.
 
-        cls.dataset_v1_patcher = patch("azureml.core.Dataset")
-        cls.mock_dataset_v1 = cls.dataset_v1_patcher.start()
+        Patches MLClient, DefaultAzureCredential and load_dotenv in
+        azure_ai.ml_studio until the test ends.
 
-        cls.compute_patcher = patch("azureml.core.compute.AmlCompute")
-        cls.mock_compute = cls.compute_patcher.start()
-
-        cls.experiment_patcher = patch("azureml.core.Experiment")
-        cls.mock_experiment = cls.experiment_patcher.start()
+        Returns:
+            MagicMock: The ml_client that every helper class will get
+        """
+        mock_ml_client_class = self.enterContext(patch("azure_ai.ml_studio.MLClient"))
+        self.enterContext(patch("azure_ai.ml_studio.DefaultAzureCredential"))
+        self.enterContext(patch("azure_ai.ml_studio.load_dotenv"))
+        return mock_ml_client_class.from_config.return_value

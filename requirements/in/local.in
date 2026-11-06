@@ -9,11 +9,12 @@
 # -----------------------------------------------------------------------------
 
 -r constraints.in
--r base.in
+-r test.in
 
 pip-tools                               # pip-compile, for regenerating the requirements/*.txt files
 
-azure-functions                         # used for linting code in ./titanic-survival-app/__init__.py
+ipykernel                               # runs the notebooks in jupyter/ and docs/contrib/ in this venv
+ipywidgets                              # progress bars in the notebooks (k-means.ipynb)
 
 # Code linters, formatters, and security scanners
 # ------------

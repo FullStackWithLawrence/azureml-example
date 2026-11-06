@@ -49,7 +49,7 @@ on:
       - "**./requirements/**"
 
 env:
-  python-version: "3.9"
+  python-version: "3.14"
 
 jobs:
   check_for_pending_release:

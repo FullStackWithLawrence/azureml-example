@@ -37,10 +37,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.14
         uses: actions/setup-python@v6
         with:
-          python-version: "3.9"
+          python-version: "3.14"
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v6

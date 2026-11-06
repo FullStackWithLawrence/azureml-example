@@ -1,11 +1,10 @@
-"""
-Test script to verify Azure ML Batch Endpoint functionality.
-"""
+"""Test script to verify Azure ML Batch Endpoint functionality."""
 
 import hashlib
 import os
 from datetime import datetime
 from logging import getLogger
+from unittest.mock import MagicMock
 
 from azure_ai.ml_studio import (
     AzureAIMLAssetsDataset,
@@ -14,7 +13,6 @@ from azure_ai.ml_studio import (
 )
 
 from .test_base import AzureMLTestBase
-
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = getLogger(__name__)
@@ -39,6 +37,10 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
     def tearDownClass(cls):
         """Tear down the test class."""
         super().tearDownClass()
+        if not cls.is_testable:
+            # Offline, nothing was created. And the mocks are gone by now, so
+            # building an endpoint here would reach Azure, and could create one.
+            return
         try:
             endpoint = AzureAIMLStudioAssetsBatchEndpoint(
                 endpoint_name=cls.endpoint_name,
@@ -48,6 +50,30 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
         # pylint: disable=W0718
         except Exception as e:
             logger.error("Failed to clean up batch endpoint: %s", e)
+
+    def test_existing_batch_endpoint_offline(self):
+        """Test that an existing endpoint is fetched with the workspace's own ml_client, and not re-created."""
+        ml_client = self.mock_azure()
+
+        batch_endpoint = AzureAIMLStudioAssetsBatchEndpoint(
+            endpoint_name="my-endpoint", model_name="best-01", compute_target_name="tiny-cluster"
+        )
+
+        self.assertIs(batch_endpoint.ml_client, ml_client)
+        ml_client.batch_endpoints.get.assert_called_once_with(name="my-endpoint")
+        ml_client.batch_endpoints.begin_create_or_update.assert_not_called()
+        self.assertEqual(batch_endpoint.deployment_name, "best-01-deployment")
+
+    def test_default_compute_target_offline(self):
+        """Test that the endpoint uses the workspace's first compute cluster when none is named."""
+        ml_client = self.mock_azure()
+        cluster = MagicMock(type="amlcompute")
+        cluster.name = "tiny-cluster"
+        ml_client.compute.list.return_value = [cluster]
+
+        batch_endpoint = AzureAIMLStudioAssetsBatchEndpoint(endpoint_name="my-endpoint", model_name="best-01")
+
+        self.assertEqual(batch_endpoint.compute_target_name, "tiny-cluster")
 
     def test_create_batch_endpoint(self):
         """Test that we can create a batch endpoint with a registered model."""
@@ -71,7 +97,7 @@ class AzureMLTestBatchEndpoint(AzureMLTestBase):
             return
 
         # First create an endpoint
-        endpoint_name = AzureAIMLStudioAssetsBatchEndpoint.get_default_name(AzureAIMLWorkspace().workspace)
+        endpoint_name = AzureAIMLStudioAssetsBatchEndpoint.get_default_name(AzureAIMLWorkspace().ml_client)
         if not endpoint_name:
             logger.warning("No default endpoint name found, skipping this test.")
             return

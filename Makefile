@@ -144,6 +144,7 @@ python-requirements:
 	pip-compile requirements/in/base.in -o requirements/base.txt
 	pip-compile requirements/in/local.in -o requirements/local.txt
 	pip-compile requirements/in/prod.in -o requirements/prod.txt
+	pip-compile requirements/in/test.in -o requirements/test.txt
 
 # ---------------------------------------------------------
 # Docker

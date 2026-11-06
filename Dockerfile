@@ -1,6 +1,6 @@
-# Use the official Python 3.9 image from the Docker Hub.
+# Use the official Python 3.14 image from the Docker Hub.
 # This runs on Debian Linux.
-FROM --platform=linux/amd64 python:3.9 AS base
+FROM python:3.14 AS base
 
 ############################## systempackages #################################
 FROM base AS systempackages
@@ -16,10 +16,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-
-# dotnet runtime installation - using official Microsoft install script
-RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 6.0 --runtime dotnet --install-dir /usr/share/dotnet && \
-    ln -s /usr/share/dotnet/dotnet /usr/local/bin/dotnet
 
 ############################## python virtual environment #################################
 FROM systempackages AS venv

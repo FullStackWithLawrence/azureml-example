@@ -29,13 +29,24 @@
 # package and its tests, the Azure Function they test, the requirements, the
 # Makefile target and coverage settings, and this workflow. A commit that
 # touches only docs, notebooks or other workflows (Dependabot's action bumps,
-# for example) doesn't start them. workflow_dispatch still runs them on demand.
+# for example) doesn't run them. workflow_dispatch always runs them.
+#
+# Pushes filter with on.push.paths. Pull requests can't: python-unit-tests is
+# main's required status check, and a pull request whose workflow never
+# starts never reports it, so it could never be merged. Instead, every pull
+# request starts this workflow, and the changes job decides. When it finds
+# nothing to test, python-unit-tests is skipped, which GitHub counts as
+# passing. Keep the changes job's pattern and on.push.paths in step.
 #------------------------------------------------------------------------------
 name: Test
 
 on:
   pull_request:
-    paths: &test-paths
+  push:
+    branches:
+      - main
+      - next
+    paths:
       - "azure_ai/**"
       - "titanic-survival-app/**"
       - "requirements/**"
@@ -43,11 +54,6 @@ on:
       - "pyproject.toml"
       - "codecov.yml"
       - ".github/workflows/test.yml"
-  push:
-    branches:
-      - main
-      - next
-    paths: *test-paths
   workflow_dispatch:
 
 # A new push to a pull request cancels the run in progress.
@@ -62,7 +68,52 @@ env:
   python-version: "3.14"
 
 jobs:
+  #----------------------------------------------------------------------------
+  # Does this pull request change anything the tests depend on? A push or a
+  # workflow_dispatch run always tests: on.push.paths already filtered it.
+  # When git can't tell, it tests rather than skips.
+  #----------------------------------------------------------------------------
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+    steps:
+      # A pull request's checkout is its merge commit. Depth 2 also fetches
+      # its first parent, HEAD^1: the base branch, which it is compared with.
+      - name: Checkout code
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Look for changes the tests depend on
+        id: filter
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "python=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! CHANGED=$(git diff --name-only HEAD^1 HEAD); then
+            echo "Couldn't compare with the base branch, so the tests run."
+            echo "python=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          PATTERN='^(azure_ai/|titanic-survival-app/|requirements/|Makefile$|pyproject\.toml$|codecov\.yml$|\.github/workflows/test\.yml$)'
+          if grep -qE "$PATTERN" <<< "$CHANGED"; then
+            echo "python=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "python=false" >> "$GITHUB_OUTPUT"
+            echo "No change the Python tests depend on, so they were skipped." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   python-unit-tests:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
